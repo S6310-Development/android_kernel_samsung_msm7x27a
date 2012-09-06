@@ -28,7 +28,6 @@
 #include <mach/memory.h>
 #include <asm/cacheflush.h>
 #include <linux/msm_ion.h>
-#include <linux/dma-mapping.h>
 
 static atomic_t system_heap_allocated;
 static atomic_t system_contig_heap_allocated;
