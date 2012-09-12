@@ -453,7 +453,6 @@ int ion_handle_get_flags(struct ion_client *client, struct ion_handle *handle,
  *		address space will be mapped to a dummy buffer.
  * @iova - pointer to store the iova address
  * @buffer_size - pointer to store the size of the buffer
- * @flags - flags for options to map
  * @iommu_flags - flags specific to the iommu.
  *
  * Maps the handle into the iova space specified via domain number. Iova
