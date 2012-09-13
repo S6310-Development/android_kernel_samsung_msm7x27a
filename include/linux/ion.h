@@ -24,17 +24,17 @@
 struct ion_handle;
 /**
  * enum ion_heap_types - list of all possible types of heaps
- * @ION_HEAP_TYPE_SYSTEM:	 memory allocated via vmalloc
+ * @ION_HEAP_TYPE_SYSTEM:         memory allocated via vmalloc
  * @ION_HEAP_TYPE_SYSTEM_CONTIG: memory allocated via kmalloc
- * @ION_HEAP_TYPE_CARVEOUT:	 memory allocated from a prereserved
- * 				 carveout heap, allocations are physically
- * 				 contiguous
+ * @ION_HEAP_TYPE_CARVEOUT:         memory allocated from a prereserved
+ *                                  carveout heap, allocations are physically
+ *                                  contiguous
  * @ION_HEAP_TYPE_IOMMU: IOMMU memory
- * @ION_HEAP_TYPE_CP:	 memory allocated from a prereserved
- *				carveout heap, allocations are physically
- *				contiguous. Used for content protection.
+ * @ION_HEAP_TYPE_CP:         memory allocated from a prereserved
+ *                                carveout heap, allocations are physically
+ *                                contiguous. Used for content protection.
  * @ION_HEAP_TYPE_DMA:          memory allocated via DMA API
- * @ION_HEAP_END:		helper for iterating over heaps
+ * @ION_HEAP_END:                helper for iterating over heaps
  */
 enum ion_heap_type {
 	ION_HEAP_TYPE_SYSTEM,
@@ -78,16 +78,16 @@ struct ion_buffer;
 
 /**
  * struct ion_platform_heap - defines a heap in the given platform
- * @type:	type of the heap from ion_heap_type enum
- * @id:		unique identifier for heap.  When allocating (lower numbers
- * 		will be allocated from first)
- * @name:	used for debug purposes
- * @base:	base address of heap in physical memory if applicable
- * @size:	size of the heap in bytes if applicable
+ * @type:        type of the heap from ion_heap_type enum
+ * @id:                unique identifier for heap.  When allocating (lower numbers
+ *                 will be allocated from first)
+ * @name:        used for debug purposes
+ * @base:        base address of heap in physical memory if applicable
+ * @size:        size of the heap in bytes if applicable
  * @memory_type:Memory type used for the heap
  * @has_outer_cache:    set to 1 if outer cache is used, 0 otherwise.
- * @extra_data:	Extra data specific to each heap type
- * @priv:	heap private data
+ * @extra_data:        Extra data specific to each heap type
+ * @priv:        heap private data
  */
 struct ion_platform_heap {
 	enum ion_heap_type type;
@@ -106,29 +106,29 @@ struct ion_platform_heap {
  * @has_outer_cache:    set to 1 if outer cache is used, 0 otherwise.
  * @nr:    number of structures in the array
  * @request_region: function to be called when the number of allocations goes
- *						from 0 -> 1
+ *                                                from 0 -> 1
  * @release_region: function to be called when the number of allocations goes
- *						from 1 -> 0
+ *                                                from 1 -> 0
  * @setup_region:   function to be called upon ion registration
  * @heaps: array of platform_heap structions
  *
  * Provided by the board file in the form of platform data to a platform device.
  */
 struct ion_platform_data {
-	unsigned int has_outer_cache;
-	int nr;
-	int (*request_region)(void *);
-	int (*release_region)(void *);
-	void *(*setup_region)(void);
-	struct ion_platform_heap *heaps;
+        unsigned int has_outer_cache;
+        int nr;
+        int (*request_region)(void *);
+        int (*release_region)(void *);
+        void *(*setup_region)(void);
+        struct ion_platform_heap *heaps;
 };
 
 #ifdef CONFIG_ION
 
 /**
  * ion_reserve() - reserve memory for ion heaps if applicable
- * @data:	platform data specifying starting physical address and
- *		size
+ * @data:        platform data specifying starting physical address and
+ *                size
  *
  * Calls memblock reserve to set aside memory for heaps that are
  * located at specific memory addresses or of specfic sizes not
@@ -138,27 +138,27 @@ void ion_reserve(struct ion_platform_data *data);
 
 /**
  * ion_client_create() -  allocate a client and returns it
- * @dev:	the global ion device
- * @heap_mask:	mask of heaps this client can allocate from
- * @name:	used for debugging
+ * @dev:        the global ion device
+ * @heap_mask:        mask of heaps this client can allocate from
+ * @name:        used for debugging
  */
 struct ion_client *ion_client_create(struct ion_device *dev,
-				     unsigned int heap_mask, const char *name);
+                                     unsigned int heap_mask, const char *name);
 
 /**
  *  msm_ion_client_create - allocate a client using the ion_device specified in
- *				drivers/gpu/ion/msm/msm_ion.c
+ *                                drivers/gpu/ion/msm/msm_ion.c
  *
  * heap_mask and name are the same as ion_client_create, return values
  * are the same as ion_client_create.
  */
 
 struct ion_client *msm_ion_client_create(unsigned int heap_mask,
-					const char *name);
+                                        const char *name);
 
 /**
  * ion_client_destroy() -  free's a client and all it's handles
- * @client:	the client
+ * @client:        the client
  *
  * Free the provided client and all it's resources including
  * any handles it is holding.
@@ -167,27 +167,27 @@ void ion_client_destroy(struct ion_client *client);
 
 /**
  * ion_alloc - allocate ion memory
- * @client:	the client
- * @len:	size of the allocation
- * @align:	requested allocation alignment, lots of hardware blocks have
- *		alignment requirements of some kind
- * @heap_mask:	mask of heaps to allocate from, if multiple bits are set
- *		heaps will be tried in order from lowest to highest order bit
- * @flags:	heap flags, the low 16 bits are consumed by ion, the high 16
- *		bits are passed on to the respective heap and can be heap
- *		custom
+ * @client:        the client
+ * @len:        size of the allocation
+ * @align:        requested allocation alignment, lots of hardware blocks have
+ *                alignment requirements of some kind
+ * @heap_mask:        mask of heaps to allocate from, if multiple bits are set
+ *                heaps will be tried in order from lowest to highest order bit
+ * @flags:        heap flags, the low 16 bits are consumed by ion, the high 16
+ *                bits are passed on to the respective heap and can be heap
+ *                custom
  *
  * Allocate memory in one of the heaps provided in heap mask and return
  * an opaque handle to it.
  */
 struct ion_handle *ion_alloc(struct ion_client *client, size_t len,
-			     size_t align, unsigned int heap_mask,
-			     unsigned int flags);
+                             size_t align, unsigned int heap_mask,
+                             unsigned int flags);
 
 /**
  * ion_free - free a handle
- * @client:	the client
- * @handle:	the handle to free
+ * @client:        the client
+ * @handle:        the handle to free
  *
  * Free the provided handle.
  */
@@ -195,10 +195,10 @@ void ion_free(struct ion_client *client, struct ion_handle *handle);
 
 /**
  * ion_phys - returns the physical address and len of a handle
- * @client:	the client
- * @handle:	the handle
- * @addr:	a pointer to put the address in
- * @len:	a pointer to put the length in
+ * @client:        the client
+ * @handle:        the handle
+ * @addr:        a pointer to put the address in
+ * @len:        a pointer to put the length in
  *
  * This function queries the heap for a particular handle to get the
  * handle's physical address.  It't output is only correct if
@@ -210,49 +210,47 @@ void ion_free(struct ion_client *client, struct ion_handle *handle);
  * holding a reference.
  */
 int ion_phys(struct ion_client *client, struct ion_handle *handle,
-	     ion_phys_addr_t *addr, size_t *len);
+             ion_phys_addr_t *addr, size_t *len);
 
 /**
  * ion_map_dma - return an sg_table describing a handle
- * @client:	the client
- * @handle:	the handle
+ * @client:        the client
+ * @handle:        the handle
  *
  * This function returns the sg_table describing
  * a particular ion handle.
  */
 struct sg_table *ion_sg_table(struct ion_client *client,
-			      struct ion_handle *handle);
+                              struct ion_handle *handle);
 
 /**
  * ion_map_kernel - create mapping for the given handle
- * @client:	the client
- * @handle:	handle to map
- * @flags:	flags for this mapping
+ * @client:        the client
+ * @handle:        handle to map
  *
  * Map the given handle into the kernel and return a kernel address that
- * can be used to access this address. If no flags are specified, this
- * will return a non-secure uncached mapping.
+ * can be used to access this address.
  */
 void *ion_map_kernel(struct ion_client *client, struct ion_handle *handle);
 
 /**
  * ion_unmap_kernel() - destroy a kernel mapping for a handle
- * @client:	the client
- * @handle:	handle to unmap
+ * @client:        the client
+ * @handle:        handle to unmap
  */
 void ion_unmap_kernel(struct ion_client *client, struct ion_handle *handle);
 
 /**
  * ion_share_dma_buf() - given an ion client, create a dma-buf fd
- * @client:	the client
- * @handle:	the handle
+ * @client:        the client
+ * @handle:        the handle
  */
 int ion_share_dma_buf(struct ion_client *client, struct ion_handle *handle);
 
 /**
  * ion_import_dma_buf() - given an dma-buf fd from the ion exporter get handle
- * @client:	the client
- * @fd:		the dma-buf fd
+ * @client:        the client
+ * @fd:                the dma-buf fd
  *
  * Given an dma-buf fd that was allocated through ion via ion_share_dma_buf,
  * import that fd and return a handle representing it.  If a dma-buf from
@@ -271,7 +269,7 @@ struct ion_handle *ion_import_dma_buf(struct ion_client *client, int fd);
  * of the buffer (caching, security, etc.)
  */
 int ion_handle_get_flags(struct ion_client *client, struct ion_handle *handle,
-				unsigned long *flags);
+                                unsigned long *flags);
 
 
 /**
@@ -283,8 +281,8 @@ int ion_handle_get_flags(struct ion_client *client, struct ion_handle *handle,
  * @partition_num - partition number to allocate iova from
  * @align - alignment for the iova
  * @iova_length - length of iova to map. If the iova length is
- *		greater than the handle length, the remaining
- *		address space will be mapped to a dummy buffer.
+ *                greater than the handle length, the remaining
+ *                address space will be mapped to a dummy buffer.
  * @iova - pointer to store the iova address
  * @buffer_size - pointer to store the size of the buffer
  * @flags - flags for options to map
@@ -295,10 +293,10 @@ int ion_handle_get_flags(struct ion_client *client, struct ion_handle *handle,
  * Returns 0 on success, negative value on error.
  */
 int ion_map_iommu(struct ion_client *client, struct ion_handle *handle,
-			int domain_num, int partition_num, unsigned long align,
-			unsigned long iova_length, unsigned long *iova,
-			unsigned long *buffer_size,
-			unsigned long flags, unsigned long iommu_flags);
+                        int domain_num, int partition_num, unsigned long align,
+                        unsigned long iova_length, unsigned long *iova,
+                        unsigned long *buffer_size,
+                        unsigned long flags, unsigned long iommu_flags);
 
 
 /**
@@ -316,7 +314,7 @@ int ion_map_iommu(struct ion_client *client, struct ion_handle *handle,
  */
 
 int ion_handle_get_size(struct ion_client *client, struct ion_handle *handle,
-			unsigned long *size);
+                        unsigned long *size);
 
 /**
  * ion_unmap_iommu - unmap the handle from an iommu
@@ -330,7 +328,7 @@ int ion_handle_get_size(struct ion_client *client, struct ion_handle *handle,
  * 0, the mapping will be removed from the iommu.
  */
 void ion_unmap_iommu(struct ion_client *client, struct ion_handle *handle,
-			int domain_num, int partition_num);
+                        int domain_num, int partition_num);
 
 
 /**
@@ -345,7 +343,7 @@ void ion_unmap_iommu(struct ion_client *client, struct ion_handle *handle,
  * Returns 0 on success
  */
 int ion_secure_heap(struct ion_device *dev, int heap_id, int version,
-			void *data);
+                        void *data);
 
 /**
  * ion_unsecure_heap - un-secure a heap
@@ -369,14 +367,14 @@ int ion_unsecure_heap(struct ion_device *dev, int heap_id, int version,
  * @vaddr -  virtual address to operate on.
  * @len - Length of data to do cache operation on.
  * @cmd - Cache operation to perform:
- *		ION_IOC_CLEAN_CACHES
- *		ION_IOC_INV_CACHES
- *		ION_IOC_CLEAN_INV_CACHES
+ *                ION_IOC_CLEAN_CACHES
+ *                ION_IOC_INV_CACHES
+ *                ION_IOC_CLEAN_INV_CACHES
  *
  * Returns 0 on success
  */
 int msm_ion_do_cache_op(struct ion_client *client, struct ion_handle *handle,
-			void *vaddr, unsigned long len, unsigned int cmd);
+                        void *vaddr, unsigned long len, unsigned int cmd);
 
 #else
 static inline void ion_reserve(struct ion_platform_data *data)
@@ -385,90 +383,90 @@ static inline void ion_reserve(struct ion_platform_data *data)
 }
 
 static inline struct ion_client *ion_client_create(struct ion_device *dev,
-				     unsigned int heap_mask, const char *name)
+                                     unsigned int heap_mask, const char *name)
 {
-	return ERR_PTR(-ENODEV);
+        return ERR_PTR(-ENODEV);
 }
 
 static inline struct ion_client *msm_ion_client_create(unsigned int heap_mask,
-					const char *name)
+                                        const char *name)
 {
-	return ERR_PTR(-ENODEV);
+        return ERR_PTR(-ENODEV);
 }
 
 static inline void ion_client_destroy(struct ion_client *client) { }
 
 static inline struct ion_handle *ion_alloc(struct ion_client *client,
-					size_t len, size_t align,
-					unsigned int heap_mask,
-					unsigned int flags)
+                                        size_t len, size_t align,
+                                        unsigned int heap_mask,
+                                        unsigned int flags)
 {
-	return ERR_PTR(-ENODEV);
+        return ERR_PTR(-ENODEV);
 }
 
 static inline void ion_free(struct ion_client *client,
-	struct ion_handle *handle) { }
+        struct ion_handle *handle) { }
 
 
 static inline int ion_phys(struct ion_client *client,
-	struct ion_handle *handle, ion_phys_addr_t *addr, size_t *len)
+        struct ion_handle *handle, ion_phys_addr_t *addr, size_t *len)
 {
-	return -ENODEV;
+        return -ENODEV;
 }
 
 static inline struct sg_table *ion_sg_table(struct ion_client *client,
-			      struct ion_handle *handle)
+                              struct ion_handle *handle)
 {
-	return ERR_PTR(-ENODEV);
+        return ERR_PTR(-ENODEV);
 }
 
 static inline void *ion_map_kernel(struct ion_client *client,
 	struct ion_handle *handle, unsigned long flags)
 {
-	return ERR_PTR(-ENODEV);
+        return ERR_PTR(-ENODEV);
 }
 
 static inline void ion_unmap_kernel(struct ion_client *client,
-	struct ion_handle *handle) { }
+        struct ion_handle *handle) { }
 
 static inline int ion_share_dma_buf(struct ion_client *client, struct ion_handle *handle)
 {
-	return -ENODEV;
+        return -ENODEV;
 }
 
 static inline struct ion_handle *ion_import_dma_buf(struct ion_client *client, int fd)
 {
-	return ERR_PTR(-ENODEV);
+        return ERR_PTR(-ENODEV);
 }
 
 static inline int ion_handle_get_flags(struct ion_client *client,
-	struct ion_handle *handle, unsigned long *flags)
+        struct ion_handle *handle, unsigned long *flags)
 {
-	return -ENODEV;
+        return -ENODEV;
 }
 
 static inline int ion_map_iommu(struct ion_client *client,
-			struct ion_handle *handle, int domain_num,
-			int partition_num, unsigned long align,
-			unsigned long iova_length, unsigned long *iova,
-			unsigned long *buffer_size,
-			unsigned long flags,
-			unsigned long iommu_flags)
+                        struct ion_handle *handle, int domain_num,
+                        int partition_num, unsigned long align,
+                        unsigned long iova_length, unsigned long *iova,
+                        unsigned long *buffer_size,
+                        unsigned long flags,
+                        unsigned long iommu_flags)
 {
-	return -ENODEV;
+        return -ENODEV;
 }
 
 static inline void ion_unmap_iommu(struct ion_client *client,
-			struct ion_handle *handle, int domain_num,
-			int partition_num)
+                        struct ion_handle *handle, int domain_num,
+                        int partition_num)
 {
-	return;
+        return;
 }
 
 static inline int ion_secure_heap(struct ion_device *dev, int heap_id,
-					int version, void *data)
+                                        int version, void *data)
 {
-	return -ENODEV;
+        return -ENODEV;
 
 }
 
@@ -479,10 +477,10 @@ static inline int ion_unsecure_heap(struct ion_device *dev, int heap_id,
 }
 
 static inline int msm_ion_do_cache_op(struct ion_client *client,
-			struct ion_handle *handle, void *vaddr,
-			unsigned long len, unsigned int cmd)
+                        struct ion_handle *handle, void *vaddr,
+                        unsigned long len, unsigned int cmd)
 {
-	return -ENODEV;
+        return -ENODEV;
 }
 
 #endif /* CONFIG_ION */
@@ -524,8 +522,8 @@ struct ion_allocation_data_old {
 
 /**
  * struct ion_fd_data - metadata passed to/from userspace for a handle/fd pair
- * @handle:	a handle
- * @fd:		a file descriptor representing that handle
+ * @handle:        a handle
+ * @fd:                a file descriptor representing that handle
  *
  * For ION_IOC_SHARE or ION_IOC_MAP userspace populates the handle field with
  * the handle returned from ion alloc, and the kernel returns the file
@@ -533,29 +531,29 @@ struct ion_allocation_data_old {
  * provides the file descriptor and the kernel returns the handle.
  */
 struct ion_fd_data {
-	struct ion_handle *handle;
-	int fd;
+        struct ion_handle *handle;
+        int fd;
 };
 
 /**
  * struct ion_handle_data - a handle passed to/from the kernel
- * @handle:	a handle
+ * @handle:        a handle
  */
 struct ion_handle_data {
-	struct ion_handle *handle;
+        struct ion_handle *handle;
 };
 
 /**
  * struct ion_custom_data - metadata passed to/from userspace for a custom ioctl
- * @cmd:	the custom ioctl function to call
- * @arg:	additional data to pass to the custom ioctl, typically a user
- *		pointer to a predefined structure
+ * @cmd:        the custom ioctl function to call
+ * @arg:        additional data to pass to the custom ioctl, typically a user
+ *                pointer to a predefined structure
  *
  * This works just like the regular cmd and arg fields of an ioctl.
  */
 struct ion_custom_data {
-	unsigned int cmd;
-	unsigned long arg;
+        unsigned int cmd;
+        unsigned long arg;
 };
 #define ION_IOC_MAGIC		'I'
 
@@ -575,7 +573,7 @@ struct ion_custom_data {
  *
  * Takes an ion_handle_data struct and frees the handle.
  */
-#define ION_IOC_FREE		_IOWR(ION_IOC_MAGIC, 1, struct ion_handle_data)
+#define ION_IOC_FREE                _IOWR(ION_IOC_MAGIC, 1, struct ion_handle_data)
 
 /**
  * DOC: ION_IOC_MAP - get a file descriptor to mmap
@@ -585,7 +583,7 @@ struct ion_custom_data {
  * descriptor open in the current address space.  This file descriptor
  * can then be used as an argument to mmap.
  */
-#define ION_IOC_MAP		_IOWR(ION_IOC_MAGIC, 2, struct ion_fd_data)
+#define ION_IOC_MAP                _IOWR(ION_IOC_MAGIC, 2, struct ion_fd_data)
 
 /**
  * DOC: ION_IOC_SHARE - creates a file descriptor to use to share an allocation
@@ -596,7 +594,7 @@ struct ion_custom_data {
  * can then be passed to another process.  The corresponding opaque handle can
  * be retrieved via ION_IOC_IMPORT.
  */
-#define ION_IOC_SHARE		_IOWR(ION_IOC_MAGIC, 4, struct ion_fd_data)
+#define ION_IOC_SHARE                _IOWR(ION_IOC_MAGIC, 4, struct ion_fd_data)
 
 /**
  * DOC: ION_IOC_IMPORT - imports a shared file descriptor
@@ -613,8 +611,7 @@ struct ion_custom_data {
  * Takes the argument of the architecture specific ioctl to call and
  * passes appropriate userdata for that ioctl
  */
-#define ION_IOC_CUSTOM		_IOWR(ION_IOC_MAGIC, 6, struct ion_custom_data)
-
+#define ION_IOC_CUSTOM                _IOWR(ION_IOC_MAGIC, 6, struct ion_custom_data)
 
 /* For compat with old-API blobs. These were moved to the MSM header */
 /**
