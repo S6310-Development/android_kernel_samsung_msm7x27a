@@ -138,6 +138,12 @@ enum cp_mem_usage {
 					   maintenance when the buffer is
 					   mapped for dma */
 
+/*
+ * This flag allows clients to defer unsecuring a buffer until the buffer
+ * is actually freed.
+ */
+#define ION_UNSECURE_DELAYED	1
+
 #ifdef __KERNEL__
 #include <linux/err.h>
 #include <mach/ion.h>
@@ -505,6 +511,70 @@ int ion_secure_heap(struct ion_device *dev, int heap_id, int version,
  */
 int ion_unsecure_heap(struct ion_device *dev, int heap_id, int version,
 			void *data);
+
+/**
+ * msm_ion_secure_heap - secure a heap. Wrapper around ion_secure_heap.
+ *
+  * @heap_id - heap id to secure.
+ *
+ * Secure a heap
+ * Returns 0 on success
+ */
+int msm_ion_secure_heap(int heap_id);
+
+/**
+ * msm_ion_unsecure_heap - unsecure a heap. Wrapper around ion_unsecure_heap.
+ *
+  * @heap_id - heap id to secure.
+ *
+ * Un-secure a heap
+ * Returns 0 on success
+ */
+int msm_ion_unsecure_heap(int heap_id);
+
+/**
+ * msm_ion_secure_heap_2_0 - secure a heap using 2.0 APIs
+ *  Wrapper around ion_secure_heap.
+ *
+ * @heap_id - heap id to secure.
+ * @usage - usage hint to TZ
+ *
+ * Secure a heap
+ * Returns 0 on success
+ */
+int msm_ion_secure_heap_2_0(int heap_id, enum cp_mem_usage usage);
+
+/**
+ * msm_ion_unsecure_heap - unsecure a heap secured with 3.0 APIs.
+ * Wrapper around ion_unsecure_heap.
+ *
+ * @heap_id - heap id to secure.
+ * @usage - usage hint to TZ
+ *
+ * Un-secure a heap
+ * Returns 0 on success
+ */
+int msm_ion_unsecure_heap_2_0(int heap_id, enum cp_mem_usage usage);
+
+/**
+ * msm_ion_secure_buffer - secure an individual buffer
+ *
+ * @client - client who has access to the buffer
+ * @handle - buffer to secure
+ * @usage - usage hint to TZ
+ * @flags - flags for the securing
+ */
+int msm_ion_secure_buffer(struct ion_client *client, struct ion_handle *handle,
+				enum cp_mem_usage usage, int flags);
+
+/**
+ * msm_ion_unsecure_buffer - unsecure an individual buffer
+ *
+ * @client - client who has access to the buffer
+ * @handle - buffer to secure
+ */
+int msm_ion_unsecure_buffer(struct ion_client *client,
+				struct ion_handle *handle);
 
 /**
  * msm_ion_do_cache_op - do cache operations.
