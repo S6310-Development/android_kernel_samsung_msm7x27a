@@ -154,6 +154,11 @@ struct msm_sensor_csi_info {
 	uint8_t is_csic;
 };
 
+enum msm_sensor_state {
+	MSM_SENSOR_POWER_UP,
+	MSM_SENSOR_POWER_DOWN,
+};
+
 struct msm_sensor_ctrl_t {
 	struct  msm_camera_sensor_info *sensordata;
 	struct i2c_client *msm_sensor_client;
@@ -197,6 +202,8 @@ struct msm_sensor_ctrl_t {
 	uint8_t is_HD_preview;
 	uint32_t need_configuration;
 	uint8_t is_initialized;
+	char sensor_name[CAMERA_NAME_LEN];
+	enum msm_sensor_state sensor_state;
 };
 
 void msm_sensor_start_stream(struct msm_sensor_ctrl_t *s_ctrl);
