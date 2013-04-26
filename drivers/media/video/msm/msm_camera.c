@@ -28,7 +28,7 @@
 #include <linux/fs.h>
 #include <linux/list.h>
 #include <linux/uaccess.h>
-#include <linux/android_pmem.h>
+#include <linux/msm_ion.h>
 #include <linux/poll.h>
 #include <media/msm_camera.h>
 #include <mach/camera.h>
@@ -306,13 +306,16 @@ static int msm_pmem_table_add(struct hlist_head *ptype,
 	unsigned long flags;
 
 
-	rc = get_pmem_file(info->fd, &paddr, &kvstart, &len, &file);
-	if (rc < 0) {
-		pr_err("%s: get_pmem_file fd %d error %d\n",
-			__func__,
-			info->fd, rc);
-		return rc;
-	}
+	region = kmalloc(sizeof(struct msm_pmem_region), GFP_KERNEL);
+	if (!region)
+		goto out;
+#ifdef CONFIG_MSM_MULTIMEDIA_USE_ION
+		region->handle = ion_import_dma_buf(client_for_ion, info->fd);
+		if (IS_ERR_OR_NULL(region->handle))
+			goto out1;
+		ion_phys(client_for_ion, region->handle,
+			&paddr, (size_t *)&len);
+#endif
 
 	if (!info->len)
 		info->len = len;
@@ -620,7 +623,9 @@ static int __msm_pmem_table_del(struct msm_sync *sync,
 					pinfo->vaddr == region->info.vaddr &&
 					pinfo->fd == region->info.fd) {
 				hlist_del(node);
-				put_pmem_file(region->file);
+#ifdef CONFIG_MSM_MULTIMEDIA_USE_ION
+				ion_free(client_for_ion, region->handle);
+#endif
 				kfree(region);
 				CDBG("%s: type %d, vaddr  0x%p\n",
 					__func__, pinfo->type, pinfo->vaddr);
@@ -640,7 +645,9 @@ static int __msm_pmem_table_del(struct msm_sync *sync,
 				pinfo->vaddr == region->info.vaddr &&
 				pinfo->fd == region->info.fd) {
 				hlist_del(node);
-				put_pmem_file(region->file);
+#ifdef CONFIG_MSM_MULTIMEDIA_USE_ION
+				ion_free(client_for_ion, region->handle);
+#endif
 				kfree(region);
 				CDBG("%s: type %d, vaddr  0x%p\n",
 					__func__, pinfo->type, pinfo->vaddr);
@@ -659,7 +666,9 @@ static int __msm_pmem_table_del(struct msm_sync *sync,
 					pinfo->vaddr == region->info.vaddr &&
 					pinfo->fd == region->info.fd) {
 				hlist_del(node);
-				put_pmem_file(region->file);
+#ifdef CONFIG_MSM_MULTIMEDIA_USE_ION
+				ion_free(client_for_ion, region->handle);
+#endif
 				kfree(region);
 				CDBG("%s: type %d, vaddr  0x%p\n",
 					__func__, pinfo->type, pinfo->vaddr);
@@ -3025,14 +3034,18 @@ static int __msm_release(struct msm_sync *sync)
 		hlist_for_each_entry_safe(region, hnode, n,
 				&sync->pmem_frames, list) {
 			hlist_del(hnode);
-			put_pmem_file(region->file);
+#ifdef CONFIG_MSM_MULTIMEDIA_USE_ION
+				ion_free(client_for_ion, region->handle);
+#endif
 			kfree(region);
 		}
 		CDBG("%s, free stats pmem region\n", __func__);
 		hlist_for_each_entry_safe(region, hnode, n,
 				&sync->pmem_stats, list) {
 			hlist_del(hnode);
-			put_pmem_file(region->file);
+#ifdef CONFIG_MSM_MULTIMEDIA_USE_ION
+				ion_free(client_for_ion, region->handle);
+#endif
 			kfree(region);
 		}
 		msm_queue_drain(&sync->pict_q, list_pict);
