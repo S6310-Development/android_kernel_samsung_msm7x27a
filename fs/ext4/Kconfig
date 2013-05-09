@@ -82,4 +82,15 @@ config EXT4_DEBUG
 	  Enables run-time debugging support for the ext4 filesystem.
 
 	  If you select Y here, then you will be able to turn on debugging
-	  with a command such as "echo 1 > /sys/kernel/debug/ext4/mballoc-debug"
+	  with a command such as:
+		echo 1 > /sys/module/ext4/parameters/mballoc_debug
+
+config EXT4_HUAWEI_DEBUG
+	bool "EXT4 huawei debugging support"
+	depends on EXT4_FS
+	help
+	  Enables saving kernel log to internal sd card when the ext4 filesystem happens error.
+
+	  If you select Y here, then you will be able to turn on saving
+	  kernel log to internal sd card when ext4 filesystem happens error
+>>>>>>> aa94acd... Squashed update of kernel from 3.4.43 to 3.4.44
