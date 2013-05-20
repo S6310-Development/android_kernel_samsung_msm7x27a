@@ -1093,11 +1093,14 @@ static void sock_copy(struct sock *nsk, const struct sock *osk)
 #endif
 }
 
+<<<<<<< HEAD
 /*
  * caches using SLAB_DESTROY_BY_RCU should let .next pointer from nulls nodes
  * un-modified. Special care is taken when initializing object to zero.
  */
 
+=======
+>>>>>>> 908ba27... Squashed update of kernel from 3.4.45 to 3.4.46
 void sk_prot_clear_portaddr_nulls(struct sock *sk, int size)
 {
 	unsigned long nulls1, nulls2;
