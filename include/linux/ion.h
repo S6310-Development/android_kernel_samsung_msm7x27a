@@ -40,6 +40,8 @@ enum ion_heap_type {
 	ION_HEAP_TYPE_SYSTEM,
 	ION_HEAP_TYPE_SYSTEM_CONTIG,
 	ION_HEAP_TYPE_CARVEOUT,
+	ION_HEAP_TYPE_IOMMU,
+	ION_HEAP_TYPE_CP,
 	ION_HEAP_TYPE_DMA,
 	ION_HEAP_TYPE_CUSTOM, /* must be last so device specific heaps always
 				 are at the end of this enum */
@@ -50,6 +52,7 @@ enum ion_heap_type {
 #define ION_HEAP_SYSTEM_CONTIG_MASK	(1 << ION_HEAP_TYPE_SYSTEM_CONTIG)
 #define ION_HEAP_CARVEOUT_MASK		(1 << ION_HEAP_TYPE_CARVEOUT)
 #define ION_HEAP_CP_MASK		(1 << ION_HEAP_TYPE_CP)
+#define ION_HEAP_TYPE_DMA_MASK         (1 << ION_HEAP_TYPE_DMA)
 
 /**
  * heap flags - the lower 16 bits are used by core ion, the upper 16
@@ -77,7 +80,8 @@ enum ion_heap_ids {
 	ION_CAMERA_HEAP_ID = 20, /* 8660 only */
 	ION_SF_HEAP_ID = 24,
 	ION_IOMMU_HEAP_ID = 25,
-	ION_QSECOM_HEAP_ID = 27,
+	ION_QSECOM_HEAP_ID = 26,
+	ION_AUDIO_HEAP_BL_ID = 27,
 	ION_AUDIO_HEAP_ID = 28,
 
 	ION_MM_FIRMWARE_HEAP_ID = 29,
@@ -102,8 +106,40 @@ enum cp_mem_usage {
 };
 
 /**
- * heap flags - the lower 16 bits are used by core ion, the upper 16
- * bits are reserved for use by the heaps themselves.
+ * Flag to use when allocating to indicate that a heap is secure.
+ */
+#define ION_SECURE (1 << ION_HEAP_ID_RESERVED)
+
+/**
+ * Macro should be used with ion_heap_ids defined above.
+ */
+#define ION_HEAP(bit) (1 << (bit))
+
+#define ION_VMALLOC_HEAP_NAME	"vmalloc"
+#define ION_AUDIO_HEAP_NAME	"audio"
+#define ION_AUDIO_BL_HEAP_NAME	"bl_mem_audio"
+#define ION_SF_HEAP_NAME	"sf"
+#define ION_MM_HEAP_NAME	"mm"
+#define ION_CAMERA_HEAP_NAME	"camera_preview"
+#define ION_IOMMU_HEAP_NAME	"iommu"
+#define ION_MFC_HEAP_NAME	"mfc"
+#define ION_WB_HEAP_NAME	"wb"
+#define ION_MM_FIRMWARE_HEAP_NAME	"mm_fw"
+#define ION_QSECOM_HEAP_NAME	"qsecom"
+#define ION_FMEM_HEAP_NAME	"fmem"
+
+#define CACHED          1
+#define UNCACHED        0
+
+#define ION_CACHE_SHIFT 0
+
+#define ION_SET_CACHE(__cache)  ((__cache) << ION_CACHE_SHIFT)
+
+#define ION_IS_CACHED(__flags)	((__flags) & (1 << ION_CACHE_SHIFT))
+
+/*
+ * This flag allows clients when mapping into the IOMMU to specify to
+ * defer un-mapping from the IOMMU until the buffer memory is freed.
  */
 #define ION_FLAG_CACHED 1		/* mappings of this buffer should be
 					   cached, ion will do cache
@@ -149,6 +185,73 @@ struct ion_platform_heap {
 	unsigned int has_outer_cache;
 	void *extra_data;
 	void *priv;
+};
+
+/**
+ * struct ion_cp_heap_pdata - defines a content protection heap in the given
+ * platform
+ * @permission_type:	Memory ID used to identify the memory to TZ
+ * @align:		Alignment requirement for the memory
+ * @secure_base:	Base address for securing the heap.
+ *			Note: This might be different from actual base address
+ *			of this heap in the case of a shared heap.
+ * @secure_size:	Memory size for securing the heap.
+ *			Note: This might be different from actual size
+ *			of this heap in the case of a shared heap.
+ * @reusable		Flag indicating whether this heap is reusable of not.
+ *			(see FMEM)
+ * @mem_is_fmem		Flag indicating whether this memory is coming from fmem
+ *			or not.
+ * @fixed_position	If nonzero, position in the fixed area.
+ * @virt_addr:		Virtual address used when using fmem.
+ * @iommu_map_all:	Indicates whether we should map whole heap into IOMMU.
+ * @iommu_2x_map_domain: Indicates the domain to use for overmapping.
+ * @request_region:	function to be called when the number of allocations
+ *			goes from 0 -> 1
+ * @release_region:	function to be called when the number of allocations
+ *			goes from 1 -> 0
+ * @setup_region:	function to be called upon ion registration
+ *
+ */
+struct ion_cp_heap_pdata {
+	enum ion_permission_type permission_type;
+	unsigned int align;
+	ion_phys_addr_t secure_base; /* Base addr used when heap is shared */
+	size_t secure_size; /* Size used for securing heap when heap is shared*/
+	int reusable;
+	int mem_is_fmem;
+	int is_cma;
+	enum ion_fixed_position fixed_position;
+	int iommu_map_all;
+	int iommu_2x_map_domain;
+	ion_virt_addr_t *virt_addr;
+	int (*request_region)(void *);
+	int (*release_region)(void *);
+	void *(*setup_region)(void);
+};
+
+/**
+ * struct ion_co_heap_pdata - defines a carveout heap in the given platform
+ * @adjacent_mem_id:	Id of heap that this heap must be adjacent to.
+ * @align:		Alignment requirement for the memory
+ * @mem_is_fmem		Flag indicating whether this memory is coming from fmem
+ *			or not.
+ * @fixed_position	If nonzero, position in the fixed area.
+ * @request_region:	function to be called when the number of allocations
+ *			goes from 0 -> 1
+ * @release_region:	function to be called when the number of allocations
+ *			goes from 1 -> 0
+ * @setup_region:	function to be called upon ion registration
+ *
+ */
+struct ion_co_heap_pdata {
+	int adjacent_mem_id;
+	unsigned int align;
+	int mem_is_fmem;
+	enum ion_fixed_position fixed_position;
+	int (*request_region)(void *);
+	int (*release_region)(void *);
+	void *(*setup_region)(void);
 };
 
 /**
