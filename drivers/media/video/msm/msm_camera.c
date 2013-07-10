@@ -34,7 +34,8 @@
 #include <mach/camera.h>
 #include <linux/syscalls.h>
 #include <linux/hrtimer.h>
-#include <linux/ion.h>
+#include <asm/mach-types.h>
+#include <linux/msm_ion.h>
 #include <mach/cpuidle.h>
 DEFINE_MUTEX(ctrl_cmd_lock);
 
