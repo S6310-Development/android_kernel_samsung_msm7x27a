@@ -271,6 +271,182 @@ static __s32 hidinput_calc_abs_res(const struct hid_field *field, __u16 code)
 	return logical_extents / physical_extents;
 }
 
+<<<<<<< HEAD
+=======
+#ifdef CONFIG_HID_BATTERY_STRENGTH
+static enum power_supply_property hidinput_battery_props[] = {
+	POWER_SUPPLY_PROP_PRESENT,
+	POWER_SUPPLY_PROP_ONLINE,
+	POWER_SUPPLY_PROP_CAPACITY,
+	POWER_SUPPLY_PROP_MODEL_NAME,
+	POWER_SUPPLY_PROP_STATUS,
+	POWER_SUPPLY_PROP_SCOPE,
+};
+
+#define HID_BATTERY_QUIRK_PERCENT	(1 << 0) /* always reports percent */
+#define HID_BATTERY_QUIRK_FEATURE	(1 << 1) /* ask for feature report */
+
+static const struct hid_device_id hid_battery_quirks[] = {
+	{ HID_BLUETOOTH_DEVICE(USB_VENDOR_ID_APPLE,
+			       USB_DEVICE_ID_APPLE_ALU_WIRELESS_2011_ANSI),
+	  HID_BATTERY_QUIRK_PERCENT | HID_BATTERY_QUIRK_FEATURE },
+	{ HID_BLUETOOTH_DEVICE(USB_VENDOR_ID_APPLE,
+		USB_DEVICE_ID_APPLE_ALU_WIRELESS_ANSI),
+	  HID_BATTERY_QUIRK_PERCENT | HID_BATTERY_QUIRK_FEATURE },
+	{}
+};
+
+static unsigned find_battery_quirk(struct hid_device *hdev)
+{
+	unsigned quirks = 0;
+	const struct hid_device_id *match;
+
+	match = hid_match_id(hdev, hid_battery_quirks);
+	if (match != NULL)
+		quirks = match->driver_data;
+
+	return quirks;
+}
+
+static int hidinput_get_battery_property(struct power_supply *psy,
+					 enum power_supply_property prop,
+					 union power_supply_propval *val)
+{
+	struct hid_device *dev = container_of(psy, struct hid_device, battery);
+	int ret = 0;
+	__u8 *buf;
+
+	switch (prop) {
+	case POWER_SUPPLY_PROP_PRESENT:
+	case POWER_SUPPLY_PROP_ONLINE:
+		val->intval = 1;
+		break;
+
+	case POWER_SUPPLY_PROP_CAPACITY:
+
+		buf = kmalloc(2 * sizeof(__u8), GFP_KERNEL);
+		if (!buf) {
+			ret = -ENOMEM;
+			break;
+		}
+		ret = dev->hid_get_raw_report(dev, dev->battery_report_id,
+					      buf, 2,
+					      dev->battery_report_type);
+
+		if (ret != 2) {
+			if (ret >= 0)
+				ret = -EINVAL;
+			kfree(buf);
+			break;
+		}
+
+		if (dev->battery_min < dev->battery_max &&
+		    buf[1] >= dev->battery_min &&
+		    buf[1] <= dev->battery_max)
+			val->intval = (100 * (buf[1] - dev->battery_min)) /
+				(dev->battery_max - dev->battery_min);
+		kfree(buf);
+		break;
+
+	case POWER_SUPPLY_PROP_MODEL_NAME:
+		val->strval = dev->name;
+		break;
+
+	case POWER_SUPPLY_PROP_STATUS:
+		val->intval = POWER_SUPPLY_STATUS_DISCHARGING;
+		break;
+
+	case POWER_SUPPLY_PROP_SCOPE:
+		val->intval = POWER_SUPPLY_SCOPE_DEVICE;
+		break;
+
+	default:
+		ret = -EINVAL;
+		break;
+	}
+
+	return ret;
+}
+
+static bool hidinput_setup_battery(struct hid_device *dev, unsigned report_type, struct hid_field *field)
+{
+	struct power_supply *battery = &dev->battery;
+	int ret;
+	unsigned quirks;
+	s32 min, max;
+
+	if (field->usage->hid != HID_DC_BATTERYSTRENGTH)
+		return false;	/* no match */
+
+	if (battery->name != NULL)
+		goto out;	/* already initialized? */
+
+	battery->name = kasprintf(GFP_KERNEL, "hid-%s-battery", dev->uniq);
+	if (battery->name == NULL)
+		goto out;
+
+	battery->type = POWER_SUPPLY_TYPE_BATTERY;
+	battery->properties = hidinput_battery_props;
+	battery->num_properties = ARRAY_SIZE(hidinput_battery_props);
+	battery->use_for_apm = 0;
+	battery->get_property = hidinput_get_battery_property;
+
+	quirks = find_battery_quirk(dev);
+
+	hid_dbg(dev, "device %x:%x:%x %d quirks %d\n",
+		dev->bus, dev->vendor, dev->product, dev->version, quirks);
+
+	min = field->logical_minimum;
+	max = field->logical_maximum;
+
+	if (quirks & HID_BATTERY_QUIRK_PERCENT) {
+		min = 0;
+		max = 100;
+	}
+
+	if (quirks & HID_BATTERY_QUIRK_FEATURE)
+		report_type = HID_FEATURE_REPORT;
+
+	dev->battery_min = min;
+	dev->battery_max = max;
+	dev->battery_report_type = report_type;
+	dev->battery_report_id = field->report->id;
+
+	ret = power_supply_register(&dev->dev, battery);
+	if (ret != 0) {
+		hid_warn(dev, "can't register power supply: %d\n", ret);
+		kfree(battery->name);
+		battery->name = NULL;
+	}
+
+	power_supply_powers(battery, &dev->dev);
+
+out:
+	return true;
+}
+
+static void hidinput_cleanup_battery(struct hid_device *dev)
+{
+	if (!dev->battery.name)
+		return;
+
+	power_supply_unregister(&dev->battery);
+	kfree(dev->battery.name);
+	dev->battery.name = NULL;
+}
+#else  /* !CONFIG_HID_BATTERY_STRENGTH */
+static bool hidinput_setup_battery(struct hid_device *dev, unsigned report_type,
+				   struct hid_field *field)
+{
+	return false;
+}
+
+static void hidinput_cleanup_battery(struct hid_device *dev)
+{
+}
+#endif	/* CONFIG_HID_BATTERY_STRENGTH */
+
+>>>>>>> 58902be... Squashed update of kernel from 3.4.62 to 3.4.63
 static void hidinput_configure_usage(struct hid_input *hidinput, struct hid_field *field,
 				     struct hid_usage *usage)
 {

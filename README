@@ -1,10 +1,10 @@
 NOTE: This kernel release is UNSTABLE and meant for development of the Samsung Galaxy Young.
-Kernel version: 3.4.55
+Kernel version: 3.4.60
 GPU Clock: 192 MHz
 CPU Clock: Stock
 
 What needs to be done?
-- MTP (testing possible fix)
+- MTP
 - Fix up all of Samsung's crappy code
 
 
