@@ -1,8 +1,12 @@
 config ARM
 	bool
 	default y
+<<<<<<< HEAD
 	select HAVE_AOUT
 	#select HAVE_DMA_API_DEBUG
+=======
+	select HAVE_DMA_API_DEBUG
+>>>>>>> 0e0de5d... Squashed update of kernel from 3.4.86 to 3.4.87
 	select HAVE_IDE if PCI || ISA || PCMCIA
 	select HAVE_DMA_CONTIGUOUS if (CPU_V6 || CPU_V6K || CPU_V7)
 	select HAVE_MEMBLOCK

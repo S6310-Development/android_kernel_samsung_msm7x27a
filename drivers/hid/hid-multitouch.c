@@ -71,8 +71,14 @@ struct mt_device {
 	struct mt_fields *fields;	/* temporary placeholder for storing the
 					   multitouch fields */
 	unsigned last_slot_field;	/* the last field of a slot */
+<<<<<<< HEAD
 	int last_mt_collection;	/* last known mt-related collection */
 	__s8 inputmode;		/* InputMode HID feature, -1 if non-existent */
+=======
+	__s16 inputmode;		/* InputMode HID feature, -1 if non-existent */
+	__s16 maxcontact_report_id;	/* Maximum Contact Number HID feature,
+				   -1 if non-existent */
+>>>>>>> 0e0de5d... Squashed update of kernel from 3.4.86 to 3.4.87
 	__u8 num_received;	/* how many contacts we received */
 	__u8 num_expected;	/* expected last contact index */
 	__u8 maxcontacts;
