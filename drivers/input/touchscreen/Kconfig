@@ -451,7 +451,7 @@ config TOUCHSCREEN_ZINITIX_VASTO
 		This enable support for Zinitix over I2C based touchscreen.		
 
 config TOUCHSCREEN_ZINITIX_INFINITE
-	tristate "Zinitix i2c touchscreen"
+	boolean "Zinitix i2c touchscreen"
 	depends on I2C
 	help
 		This enable support for Zinitix over I2C based touchscreen.		
@@ -476,7 +476,7 @@ config TOUCHSCREEN_MELFAS_KYLE
 		This enable support for Melfas over I2C based touchscreen.
 
 config TOUCHSCREEN_CYPRESS_TMA46X
-	tristate "cypress i2c touchscreen"
+	boolean "cypress i2c touchscreen"
 	depends on I2C
 	help
 		This enable support for Cypress over I2C based touchscreen.

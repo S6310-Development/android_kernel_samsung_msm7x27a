@@ -158,6 +158,8 @@ static void netlink_sock_destruct(struct sock *sk)
 	if (nlk->cb) {
 		if (nlk->cb->done)
 			nlk->cb->done(nlk->cb);
+
+		module_put(nlk->cb->module);
 		netlink_destroy_callback(nlk->cb);
 	}
 
@@ -1734,6 +1736,7 @@ static int netlink_dump(struct sock *sk)
 	nlk->cb = NULL;
 	mutex_unlock(nlk->cb_mutex);
 
+	module_put(cb->module);
 	netlink_destroy_callback(cb);
 	return 0;
 
@@ -1760,6 +1763,7 @@ int __netlink_dump_start(struct sock *ssk, struct sk_buff *skb,
 	cb->done = control->done;
 	cb->nlh = nlh;
 	cb->data = control->data;
+	cb->module = control->module;
 	cb->min_dump_alloc = control->min_dump_alloc;
 	atomic_inc(&skb->users);
 	cb->skb = skb;
@@ -1779,6 +1783,16 @@ int __netlink_dump_start(struct sock *ssk, struct sk_buff *skb,
 		ret = -EBUSY;
 		goto out;
 	}
+<<<<<<< HEAD
+=======
+	/* add reference of module which cb->dump belongs to */
+	if (!try_module_get(cb->module)) {
+		mutex_unlock(nlk->cb_mutex);
+		netlink_destroy_callback(cb);
+		ret = -EPROTONOSUPPORT;
+		goto out;
+	}
+>>>>>>> 4067e88... Squashed update of kernel from 3.4.0 to 3.4.42
 
 	nlk->cb = cb;
 	mutex_unlock(nlk->cb_mutex);

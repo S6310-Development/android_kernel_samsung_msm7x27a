@@ -173,7 +173,7 @@ config KEYBOARD_EP93XX
 	  module will be called ep93xx_keypad.
 
 config KEYBOARD_GPIO
-	tristate "GPIO Buttons"
+	boolean "GPIO Buttons"
 	depends on GENERIC_GPIO
 	help
 	  This driver implements support for buttons connected

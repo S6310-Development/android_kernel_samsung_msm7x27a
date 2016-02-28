@@ -650,7 +650,7 @@ config SEC_DEBUG_SCHED_LOG
 config SEC_DEBUG_IRQ_EXIT_LOG
         depends on SEC_DEBUG_SCHED_LOG
         default n
-        bool "IRQ Log
+        bool "IRQ Log"
 
 config USB_CDFS_SUPPORT
 	bool "Auto install for cdfs"
