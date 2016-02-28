@@ -59,16 +59,26 @@ struct mt_slot {
 	bool seen_in_this_frame;/* has this slot been updated */
 };
 
+struct mt_fields {
+	unsigned usages[HID_MAX_FIELDS];
+	unsigned int length;
+};
+
 struct mt_device {
 	struct mt_slot curdata;	/* placeholder of incoming data */
 	struct mt_class *mtclass;	/* our mt device class */
 	unsigned last_field_index;	/* last field index of the report */
+	struct mt_fields *fields;	/* temporary placeholder for storing the
+					   multitouch fields */
 	unsigned last_slot_field;	/* the last field of a slot */
 	int last_mt_collection;	/* last known mt-related collection */
 	__s8 inputmode;		/* InputMode HID feature, -1 if non-existent */
 	__u8 num_received;	/* how many contacts we received */
 	__u8 num_expected;	/* expected last contact index */
 	__u8 maxcontacts;
+	__u8 touches_by_report;	/* how many touches are present in one report:
+				* 1 means we should use a serial protocol
+				* > 1 means hybrid (multitouch) protocol */
 	bool curvalid;		/* is the current contact valid? */
 	struct mt_slot *slots;
 };
@@ -205,6 +215,17 @@ static void set_abs(struct input_dev *input, unsigned int code,
 	input_set_abs_params(input, code, fmin, fmax, fuzz, 0);
 }
 
+static void mt_store_field(struct hid_usage *usage, struct mt_device *td,
+ 		struct hid_input *hi)
+ {
+	struct mt_fields *f = td->fields;
+
+	if (f->length >= HID_MAX_FIELDS)
+		return;
+
+	f->usages[f->length++] = usage->hid;
+ }
+
 static int mt_input_mapping(struct hid_device *hdev, struct hid_input *hi,
 		struct hid_field *field, struct hid_usage *usage,
 		unsigned long **bit, int *max)
@@ -238,6 +259,7 @@ static int mt_input_mapping(struct hid_device *hdev, struct hid_input *hi,
 			set_abs(hi->input, ABS_X, field, cls->sn_move);
 			if (td->last_mt_collection == usage->collection_index) {
 				td->last_slot_field = usage->hid;
+			        mt_store_field(usage, td, hi);
 				td->last_field_index = field->index;
 			}
 			return 1;
@@ -252,6 +274,7 @@ static int mt_input_mapping(struct hid_device *hdev, struct hid_input *hi,
 			set_abs(hi->input, ABS_Y, field, cls->sn_move);
 			if (td->last_mt_collection == usage->collection_index) {
 				td->last_slot_field = usage->hid;
+			        mt_store_field(usage, td, hi);
 				td->last_field_index = field->index;
 			}
 			return 1;
@@ -263,12 +286,14 @@ static int mt_input_mapping(struct hid_device *hdev, struct hid_input *hi,
 		case HID_DG_INRANGE:
 			if (td->last_mt_collection == usage->collection_index) {
 				td->last_slot_field = usage->hid;
+			        mt_store_field(usage, td, hi);
 				td->last_field_index = field->index;
 			}
 			return 1;
 		case HID_DG_CONFIDENCE:
 			if (td->last_mt_collection == usage->collection_index) {
 				td->last_slot_field = usage->hid;
+			        mt_store_field(usage, td, hi);
 				td->last_field_index = field->index;
 			}
 			return 1;
@@ -277,6 +302,7 @@ static int mt_input_mapping(struct hid_device *hdev, struct hid_input *hi,
 			input_set_capability(hi->input, EV_KEY, BTN_TOUCH);
 			if (td->last_mt_collection == usage->collection_index) {
 				td->last_slot_field = usage->hid;
+			        mt_store_field(usage, td, hi);
 				td->last_field_index = field->index;
 			}
 			return 1;
@@ -285,6 +311,7 @@ static int mt_input_mapping(struct hid_device *hdev, struct hid_input *hi,
 				td->maxcontacts = MT_DEFAULT_MAXCONTACT;
 			input_mt_init_slots(hi->input, td->maxcontacts);
 			td->last_slot_field = usage->hid;
+			mt_store_field(usage, td, hi);
 			td->last_field_index = field->index;
 			td->last_mt_collection = usage->collection_index;
 			return 1;
@@ -295,6 +322,7 @@ static int mt_input_mapping(struct hid_device *hdev, struct hid_input *hi,
 				cls->sn_width);
 			if (td->last_mt_collection == usage->collection_index) {
 				td->last_slot_field = usage->hid;
+			        mt_store_field(usage, td, hi);
 				td->last_field_index = field->index;
 			}
 			return 1;
@@ -307,6 +335,7 @@ static int mt_input_mapping(struct hid_device *hdev, struct hid_input *hi,
 					ABS_MT_ORIENTATION, 0, 1, 0, 0);
 			if (td->last_mt_collection == usage->collection_index) {
 				td->last_slot_field = usage->hid;
+			        mt_store_field(usage, td, hi);
 				td->last_field_index = field->index;
 			}
 			return 1;
@@ -322,6 +351,7 @@ static int mt_input_mapping(struct hid_device *hdev, struct hid_input *hi,
 				cls->sn_pressure);
 			if (td->last_mt_collection == usage->collection_index) {
 				td->last_slot_field = usage->hid;
+			        mt_store_field(usage, td, hi);
 				td->last_field_index = field->index;
 			}
 			return 1;
@@ -523,6 +553,16 @@ static void mt_set_input_mode(struct hid_device *hdev)
 	}
 }
 
+static void mt_post_parse(struct mt_device *td)
+{
+	struct mt_fields *f = td->fields;
+
+	if (td->touches_by_report > 0) {
+		int field_count_per_touch = f->length / td->touches_by_report;
+		td->last_slot_field = f->usages[field_count_per_touch - 1];
+	}
+}
+
 static int mt_probe(struct hid_device *hdev, const struct hid_device_id *id)
 {
 	int ret, i;
@@ -550,6 +590,7 @@ static int mt_probe(struct hid_device *hdev, const struct hid_device_id *id)
 	td->inputmode = -1;
 	td->last_mt_collection = -1;
 	hid_set_drvdata(hdev, td);
+        mt_post_parse(td);
 
 	ret = hid_parse(hdev);
 	if (ret != 0)
