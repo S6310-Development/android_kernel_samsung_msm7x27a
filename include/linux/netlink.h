@@ -272,7 +272,13 @@ static inline int netlink_dump_start(struct sock *ssk, struct sk_buff *skb,
 	if (!control->module)
 		control->module = THIS_MODULE;
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+
+	return __netlink_dump_start(ssk, skb, nlh, control);
+}
+>>>>>>> 4067e88... Squashed update of kernel from 3.4.0 to 3.4.42
 
 	return __netlink_dump_start(ssk, skb, nlh, control);
 }
