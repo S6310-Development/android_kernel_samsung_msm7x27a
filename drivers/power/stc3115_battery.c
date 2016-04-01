@@ -1993,6 +1993,21 @@ static int __devinit stc311x_probe(struct i2c_client *client,
 
 	/* init gas gauge system */
 	sav_client = chip->client;
+	
+	/* stc chip reset */
+  	printk("stc311x probe reset stc3115 [%d]\n", ret);	
+
+	msm_batt_chg_en_call(STOP_CHARGING);
+
+   	val = 0x11;
+	ret = STC31xx_WriteByte(STC311x_REG_CTRL, val);
+	if (ret != OK)
+	{
+		printk("stc311x probe *** reset stc3115 fail *** [%d]\n", ret);	
+	}
+	mdelay(1000);
+	
+	msm_batt_chg_en_call(START_CHARGING);
 
 	/* stc chip reset */
   	printk("stc311x probe reset stc3115 [%d]\n", ret);	
