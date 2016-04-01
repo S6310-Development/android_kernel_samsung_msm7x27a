@@ -21,7 +21,12 @@
 #include <linux/stc3115_battery.h>
 #include <linux/slab.h>
 
-#define GG_VERSION "2.00a"
+#define GG_VERSION "2.01a"
+
+typedef enum {
+	STOP_CHARGING,
+	START_CHARGING
+} chg_enable_type;
 
 /*Function declaration*/
 int STC31xx_SetPowerSavingMode(void);
@@ -38,6 +43,8 @@ void GasGauge_Reset(void);
 void stc311x_Option1(struct i2c_client *client);
 
 extern int MainTrim(struct i2c_client *client);
+
+extern void msm_batt_chg_en_call(chg_enable_type enable);
 
 
 /* ******************************************************************************** */
@@ -77,7 +84,7 @@ extern int MainTrim(struct i2c_client *client);
 #define CHG_MIN_CURRENT     200   /* min charge current in mA                       */
 #define CHG_END_CURRENT      20   /* end charge current in mA                       */
 #define APP_MIN_CURRENT     (-5)  /* minimum application current consumption in mA ( <0 !) */
-#define APP_MIN_VOLTAGE	    3000  /* application cut-off voltage                    */
+#define APP_MIN_VOLTAGE	    3300  /* application cut-off voltage                    */
 #define TEMP_MIN_ADJ		 (-5) /* minimum temperature for gain adjustment */
 
 #define VMTEMPTABLE        { 85, 90, 100, 160, 320, 440, 840 }  /* normalized VM_CNF at 60, 40, 25, 10, 0, -10C, -20C */
@@ -1516,8 +1523,11 @@ int GasGauge_Task(GasGauge_DataTypeDef *GG)
     BattData.SOC = CompensateSOC(BattData.SOC,BattData.Temperature);
 
     //early empty compensation
-    if (BattData.AvgVoltage<(APP_MIN_VOLTAGE+200) && BattData.AvgVoltage>(APP_MIN_VOLTAGE-500))
-	  BattData.SOC = BattData.SOC * (BattData.AvgVoltage - APP_MIN_VOLTAGE) / 200;
+    if (BattData.AvgVoltage<APP_MIN_VOLTAGE)
+	  BattData.SOC = 0;
+    else
+	  if (BattData.AvgVoltage<(APP_MIN_VOLTAGE+200))
+	    BattData.SOC = BattData.SOC * (BattData.AvgVoltage - APP_MIN_VOLTAGE) / 200;
 
 	
     BattData.AccVoltage += (BattData.Voltage - BattData.AvgVoltage);
@@ -1904,6 +1914,7 @@ static int __devinit stc311x_probe(struct i2c_client *client,
   struct i2c_adapter *adapter = to_i2c_adapter(client->dev.parent);
   struct stc311x_chip *chip;
   int ret,res,Loop;
+  unsigned char val;
 
   GasGauge_DataTypeDef GasGaugeData;
 
@@ -1959,6 +1970,21 @@ static int __devinit stc311x_probe(struct i2c_client *client,
 
 	/* init gas gauge system */
 	sav_client = chip->client;
+	
+	/* stc chip reset */
+  	printk("stc311x probe reset stc3115 [%d]\n", ret);	
+
+	msm_batt_chg_en_call(STOP_CHARGING);
+
+   	val = 0x11;
+	ret = STC31xx_WriteByte(STC311x_REG_CTRL, val);
+	if (ret != OK)
+	{
+		printk("stc311x probe *** reset stc3115 fail *** [%d]\n", ret);	
+	}
+	mdelay(1000);
+	
+	msm_batt_chg_en_call(START_CHARGING);
 
 	/* write config data for cut 2.0 */
 	ret = MainTrim(sav_client);
@@ -2067,7 +2093,7 @@ static int stc311x_resume(struct i2c_client *client)
 {
 	struct stc311x_chip *chip = i2c_get_clientdata(client);
 
-	schedule_delayed_work(&chip->work, STC311x_DELAY);
+	schedule_delayed_work(&chip->work, 10);
 	return 0;
 }
 

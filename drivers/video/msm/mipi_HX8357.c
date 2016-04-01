@@ -24,7 +24,8 @@
 
 #include "lcdc_backlight_ic.h"
 
-static u32 read_recovery=0;
+int read_recovery=0;
+EXPORT_SYMBOL(read_recovery);
 
 extern int charging_boot;
 
@@ -33,12 +34,12 @@ static int __init hx8357d_lcd_read_recovery(char *param)
 	if( param[0]=='1' )
 	{
 		read_recovery = 1;
-		printk ( "@@@@@%s-read_recovery is 1\n");
+		printk ( "@@@@@%s-read_recovery is 1\n", __func__ );
 	}
 	else
 	{
 		read_recovery = 0;
-		printk ( "@@@@@%s-read_recovery is 0\n");
+		printk ( "@@@@@%s-read_recovery is 0\n", __func__ );
 	}
 }
 __setup("recovery=", hx8357d_lcd_read_recovery);
@@ -375,6 +376,12 @@ static void hx8357_disp_powerup(void)
 
 		return; // for first booting
 	}
+	
+	if( read_recovery > 0 )
+	{
+		hx8357_vreg_config(VREG_ENABLE);
+		msleep(20);
+	}
 
 	gpio_tlmm_config(GPIO_CFG
 			 (lcd_reset, 0, GPIO_CFG_OUTPUT, GPIO_CFG_NO_PULL,
@@ -390,6 +397,13 @@ static void hx8357_disp_powerdown(void)
 {	
 
 	DPRINT("start %s\n", __func__);
+	
+	if( read_recovery > 0 )
+	{
+		gpio_set_value(lcd_reset, 0);
+		msleep(20);
+		hx8357_vreg_config(VREG_DISABLE);
+	}
 }
 
 /* not used as it causes serious lockups on rev0.2 devices */
@@ -444,8 +458,6 @@ static int mipi_hx8357_lcd_on(struct platform_device *pdev)
 	/* workaround : when recovery mode, do lcd on only at first */
 	if( read_recovery == 1 )
 		read_recovery = 2;
-	else if( read_recovery > 1 )
-		return 0;
 	else
 		;
 	/************************************************************/
@@ -565,11 +577,6 @@ static int mipi_hx8357_lcd_on(struct platform_device *pdev)
 static int mipi_hx8357_lcd_off(struct platform_device *pdev)
 {
 	struct msm_fb_data_type *mfd;
-
-	/* workaround : when recovery mode, do not lcd off */
-	if( read_recovery > 0 )
-		return 0;
-	/***************************************************/
 
 	if (DISP_STATE_OFF == disp_powered_up) {
 		DPRINT(" %s: already off\n", __func__);

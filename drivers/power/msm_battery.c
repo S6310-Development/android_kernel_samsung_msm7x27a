@@ -161,7 +161,7 @@ const int temp_table[][2] = {
 const int temp_table[][2] = {
 	 /*ADC, Temperature (C) */
 	 {226, 70},
-	 {300, 60},
+	 {288, 60},
 	 {375, 50},
 	 {449, 40},
 	 {545, 30},
@@ -244,6 +244,7 @@ const int temp_table[][2] = {
 #define TOTAL_WATING_TIME			(20 * HZ)
 #define WAKE_LOCK_TIME_OUT		(5 * HZ)
 #define ALARM_POLLING_TIME_SHORT	(1 * 60)
+#define ALARM_POLLING_TIME_SHORT_10	(3 * 60)
 #define ALARM_POLLING_TIME_LONG	(10 * 60)
 
 #define BAT_USE_TIMER_EXPIRE		(10 * 60*HZ)
@@ -332,7 +333,7 @@ const int temp_table[][2] = {
 #define BATT_TEMP_LOW_RECOVER_LPM	776
 #elif  defined(CONFIG_MACH_ROY)
 #define BATT_TEMP_EVENT_BLOCK   719
-#define BATT_TEMP_HIGH_BLOCK   298
+#define BATT_TEMP_HIGH_BLOCK   288
 #define BATT_TEMP_HIGH_RECOVER  444
 #define BATT_TEMP_LOW_BLOCK   802
 #define BATT_TEMP_LOW_RECOVER  778
@@ -980,6 +981,7 @@ static void msm_batt_set_back_charging_start_time(chg_enable_type enable);
 #endif
 static int msm_batt_is_over_abs_time(void);
 
+void msm_batt_chg_en_call(chg_enable_type enable);
 static void msm_batt_chg_en(chg_enable_type enable);
 
 static DECLARE_WORK(msm_batt_work, msm_batt_check_event);
@@ -2308,6 +2310,11 @@ int calculate_batt_voltage(int vbatt_adc)
 	return batt_volt;
 }
 #endif /*CONFIG_MAX17043_FUEL_GAUGE*//*end for rev 03 version for cal voltage*/
+
+void msm_batt_chg_en_call(chg_enable_type enable)
+{
+	msm_batt_chg_en(enable);
+}
 
 static void msm_batt_chg_en(chg_enable_type enable)
 {
@@ -4242,6 +4249,19 @@ static int msm_batt_suspend(struct platform_device *pdev,
 		pm_message_t state)
 {
 	pr_debug("[BATT] %s\n", __func__);
+#if defined(CONFIG_MACH_ROY)
+	if (msm_batt_info.batt_capacity <= 5) {
+		msm_batt_set_alarm(ALARM_POLLING_TIME_SHORT);
+		pr_info("%s[BATT] set alarm for long time\n", __func__);
+	}else if((msm_batt_info.batt_capacity <= 10)){
+		msm_batt_set_alarm(ALARM_POLLING_TIME_SHORT_10);
+		pr_info("%s[BATT] set alarm for short time 10\n", __func__);	
+	}
+	else {
+		msm_batt_set_alarm(ALARM_POLLING_TIME_LONG);
+		pr_info("%s[BATT] set alarm for shor time\n", __func__);
+	}
+#else
 	if (msm_batt_info.batt_capacity < 5) {
 		msm_batt_set_alarm(ALARM_POLLING_TIME_SHORT);
 		pr_info("%s[BATT] set alarm for long time\n", __func__);
@@ -4249,6 +4269,7 @@ static int msm_batt_suspend(struct platform_device *pdev,
 		msm_batt_set_alarm(ALARM_POLLING_TIME_LONG);
 		pr_info("%s[BATT] set alarm for shor time\n", __func__);
 	}
+#endif	
 	del_timer_sync(&msm_batt_info.timer);
 
 	return 0;

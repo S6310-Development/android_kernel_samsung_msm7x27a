@@ -37,6 +37,7 @@
 
 #if defined(CONFIG_FB_MSM_MIPI_HX8357_CMD_SMD_HVGA_PT_PANEL)
 #define ULPS_IMPLEMENTATION
+extern int read_recovery;
 #endif
 
 u32 dsi_irq;
@@ -172,48 +173,51 @@ static int mipi_dsi_off(struct platform_device *pdev)
 	ret = panel_next_off(pdev);
 
 #ifdef ULPS_IMPLEMENTATION
-	mipi_dsi_op_mode_config(DSI_VIDEO_MODE);
-	x = MIPI_INP(MIPI_DSI_BASE + 0x000c);
-	pr_err("pkomandu: 0x000c=%x",x);
-	x = x & 0x10000fff;
-	MIPI_OUTP(MIPI_DSI_BASE + 0x000c, x);
-	pr_err("pkomandu: 0x000c=%x",x);
-	msleep(100);
-	pr_err("pkomandu: Done");
-	x = MIPI_INP(MIPI_DSI_BASE + 0x010c); /* DSI_INTL_CTRL */
-	MIPI_OUTP(MIPI_DSI_BASE + 0x010c, x | DSI_INTR_VIDEO_DONE_MASK);
-	pr_err("pkomandu: 0x010c=%x",MIPI_INP(MIPI_DSI_BASE + 0x010c));
-	MIPI_OUTP(MIPI_DSI_BASE + 0x118, 0x33f); /* DSI_CLK_CTRL */
-	y = MIPI_INP(MIPI_DSI_BASE + 0x0000);
-	MIPI_OUTP(MIPI_DSI_BASE + 0x0000, 0);
-	MIPI_OUTP(MIPI_DSI_BASE + 0x114, 1);
-	MIPI_OUTP(MIPI_DSI_BASE + 0x114, 0);
-	hbp = var->left_margin;
-	hfp = var->right_margin;
-	vbp = var->upper_margin;
-	vfp = var->lower_margin;
-	hspw = var->hsync_len;
-	vspw = var->vsync_len;
-	width = mfd->panel_info.xres;
-	height = mfd->panel_info.yres;
-	dummy_xres = mfd->panel_info.lcdc.xres_pad;
-	dummy_yres = mfd->panel_info.lcdc.yres_pad;
-	//MIPI_OUTP(MIPI_DSI_BASE + 0x00ac, mipi_dsi_pdata->dlane_swap);
-	MIPI_OUTP(MIPI_DSI_BASE + 0x00ac, 0x01); // dlane_swap : 0x01
-	MIPI_OUTP(MIPI_DSI_BASE + 0x20, ((hbp + width + dummy_xres) << 16 | (hbp)));
-	MIPI_OUTP(MIPI_DSI_BASE + 0x24, ((vbp + height + dummy_yres) << 16 | (vbp)));
-	MIPI_OUTP(MIPI_DSI_BASE + 0x28, (vbp + height + dummy_yres + vfp) << 16 | (hbp + width + dummy_xres + hfp));
-	MIPI_OUTP(MIPI_DSI_BASE + 0x2c, (hspw << 16));
-	MIPI_OUTP(MIPI_DSI_BASE + 0x30, 0);
-	MIPI_OUTP(MIPI_DSI_BASE + 0x34, (vspw << 16));
-	MIPI_OUTP(MIPI_DSI_BASE + 0x0000, y);
-	tmp = MIPI_INP(MIPI_DSI_BASE + 0xA8);
-	MIPI_OUTP(MIPI_DSI_BASE + 0xA8, tmp | (1 << 28));
-	wait_for_video(3);
-	MIPI_OUTP(MIPI_DSI_BASE + 0x010c, x);
-	MIPI_OUTP(MIPI_DSI_BASE + 0xA8, tmp);
-
-	mipi_ulps_mode(1);
+	if( read_recovery == 0 )
+	{
+		mipi_dsi_op_mode_config(DSI_VIDEO_MODE);
+		x = MIPI_INP(MIPI_DSI_BASE + 0x000c);
+		pr_err("pkomandu: 0x000c=%x",x);
+		x = x & 0x10000fff;
+		MIPI_OUTP(MIPI_DSI_BASE + 0x000c, x);
+		pr_err("pkomandu: 0x000c=%x",x);
+		msleep(100);
+		pr_err("pkomandu: Done");
+		x = MIPI_INP(MIPI_DSI_BASE + 0x010c); /* DSI_INTL_CTRL */
+		MIPI_OUTP(MIPI_DSI_BASE + 0x010c, x | DSI_INTR_VIDEO_DONE_MASK);
+		pr_err("pkomandu: 0x010c=%x",MIPI_INP(MIPI_DSI_BASE + 0x010c));
+		MIPI_OUTP(MIPI_DSI_BASE + 0x118, 0x33f); /* DSI_CLK_CTRL */
+		y = MIPI_INP(MIPI_DSI_BASE + 0x0000);
+		MIPI_OUTP(MIPI_DSI_BASE + 0x0000, 0);
+		MIPI_OUTP(MIPI_DSI_BASE + 0x114, 1);
+		MIPI_OUTP(MIPI_DSI_BASE + 0x114, 0);
+		hbp = var->left_margin;
+		hfp = var->right_margin;
+		vbp = var->upper_margin;
+		vfp = var->lower_margin;
+		hspw = var->hsync_len;
+		vspw = var->vsync_len;
+		width = mfd->panel_info.xres;
+		height = mfd->panel_info.yres;
+		dummy_xres = mfd->panel_info.lcdc.xres_pad;
+		dummy_yres = mfd->panel_info.lcdc.yres_pad;
+		//MIPI_OUTP(MIPI_DSI_BASE + 0x00ac, mipi_dsi_pdata->dlane_swap);
+		MIPI_OUTP(MIPI_DSI_BASE + 0x00ac, 0x01); // dlane_swap : 0x01
+		MIPI_OUTP(MIPI_DSI_BASE + 0x20, ((hbp + width + dummy_xres) << 16 | (hbp)));
+		MIPI_OUTP(MIPI_DSI_BASE + 0x24, ((vbp + height + dummy_yres) << 16 | (vbp)));
+		MIPI_OUTP(MIPI_DSI_BASE + 0x28, (vbp + height + dummy_yres + vfp) << 16 | (hbp + width + dummy_xres + hfp));
+		MIPI_OUTP(MIPI_DSI_BASE + 0x2c, (hspw << 16));
+		MIPI_OUTP(MIPI_DSI_BASE + 0x30, 0);
+		MIPI_OUTP(MIPI_DSI_BASE + 0x34, (vspw << 16));
+		MIPI_OUTP(MIPI_DSI_BASE + 0x0000, y);
+		tmp = MIPI_INP(MIPI_DSI_BASE + 0xA8);
+		MIPI_OUTP(MIPI_DSI_BASE + 0xA8, tmp | (1 << 28));
+		wait_for_video(3);
+		MIPI_OUTP(MIPI_DSI_BASE + 0x010c, x);
+		MIPI_OUTP(MIPI_DSI_BASE + 0xA8, tmp);
+	
+		mipi_ulps_mode(1);
+	}
 #endif
 
 #ifdef CONFIG_MSM_BUS_SCALING
@@ -291,7 +295,10 @@ RETRY_MIPI_DSI_ON:
 	mipi_dsi_clk_enable();
 
 #ifdef ULPS_IMPLEMENTATION
+	if( read_recovery == 0 )
+	{
 		mipi_ulps_mode(0);
+	}
 #endif
 
 	MIPI_OUTP(MIPI_DSI_BASE + 0x114, 1);

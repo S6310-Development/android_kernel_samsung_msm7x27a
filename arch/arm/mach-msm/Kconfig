@@ -2772,6 +2772,12 @@ config SND_ADSP_DEBUG
 	default n
 	help
 	  if you want to check probe funcion is called or not in ADSP, enable this menu,
+
+config MACH_ROYSS
+	bool "Roy single SIM model to separating from ROY"
+	default n
+	help
+	  if you want to separate something from Roy dual SIM, enable this menu,
 	  
 config DOGKEEPALIVE_LOG
 	bool "Dog keep alive log at RPC level"

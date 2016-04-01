@@ -546,7 +546,13 @@ static void rpcrouter_register_board_dev(struct rr_server *server)
 			D("%s: registering device %x\n",
 			  __func__, board_info->dev->prog);
 			list_del(&board_info->list);
+			#ifdef CONFIG_MACH_ROY
+				preempt_disable();
+			#endif
 			rc = platform_device_register(&board_info->dev->pdev);
+			#ifdef CONFIG_MACH_ROY
+				preempt_enable();
+			#endif
 			if (rc)
 				pr_err("%s: board dev register failed %d\n",
 				       __func__, rc);

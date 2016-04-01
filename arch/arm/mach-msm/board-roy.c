@@ -1300,8 +1300,8 @@ static struct stc311x_platform_data stc3115_data = {
 		.Vmode= 0,       /*REG_MODE, BIT_VMODE 1=Voltage mode, 0=mixed mode */
   		.Alm_SOC = 10,      /* SOC alm level %*/
   		.Alm_Vbat = 3600,   /* Vbat alm level mV*/
-  		.CC_cnf = 262,      /* nominal CC_cnf, coming from battery characterisation*/
-  		.VM_cnf = 266,      /* nominal VM cnf , coming from battery characterisation*/
+  		.CC_cnf = 257,      /* nominal CC_cnf, coming from battery characterisation*/
+  		.VM_cnf = 261,      /* nominal VM cnf , coming from battery characterisation*/
   		.Cnom = 1300,       /* nominal capacity in mAh, coming from battery characterisation*/
   		.Rsense = 10,       /* sense resistor mOhms*/
   		.RelaxCurrent = 65, /* current for relaxation in mA (< C/20) */
@@ -3031,8 +3031,10 @@ static void nc_gpio_init(void)
 	gpio_tlmm_config(GPIO_CFG(98,  0, GPIO_CFG_INPUT, GPIO_CFG_PULL_DOWN, GPIO_CFG_2MA), GPIO_CFG_ENABLE);
 	gpio_tlmm_config(GPIO_CFG(113, 0, GPIO_CFG_INPUT, GPIO_CFG_PULL_DOWN, GPIO_CFG_2MA), GPIO_CFG_ENABLE);
 	gpio_tlmm_config(GPIO_CFG(124, 0, GPIO_CFG_INPUT, GPIO_CFG_PULL_DOWN, GPIO_CFG_2MA), GPIO_CFG_ENABLE);
+#ifndef CONFIG_MACH_ROY_DTV //gpio 131/132 must be set PULLUP for latin roy-dtv
 	gpio_tlmm_config(GPIO_CFG(131, 0, GPIO_CFG_INPUT, GPIO_CFG_PULL_DOWN, GPIO_CFG_2MA), GPIO_CFG_ENABLE);
 	gpio_tlmm_config(GPIO_CFG(132, 0, GPIO_CFG_INPUT, GPIO_CFG_PULL_DOWN, GPIO_CFG_2MA), GPIO_CFG_ENABLE);
+#endif	
 }
 
 static void __init msm7x2x_init(void)

@@ -233,6 +233,8 @@ static int mipi_cmd_hx8357_hvga_pt_init(void)
 
 	pinfo.xres = 320;
 	pinfo.yres = 480;
+	pinfo.height = 69;
+	pinfo.width  = 46;
 	pinfo.type = MIPI_VIDEO_PANEL;
 	pinfo.pdest = DISPLAY_1;
 	pinfo.wait_cycle = 0;

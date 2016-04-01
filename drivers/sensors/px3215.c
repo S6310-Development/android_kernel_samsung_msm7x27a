@@ -1077,7 +1077,7 @@ done:
 }
 
 // [HSS] perrmission will be changed
-static DEVICE_ATTR(prox_thresh, S_IRUGO | S_IWUGO,
+static DEVICE_ATTR(prox_thresh, S_IRUGO | S_IWUSR | S_IWGRP,
 	proximity_thresh_show, proximity_thresh_store);
 
 static ssize_t prox_offset_pass_show(struct device *dev,

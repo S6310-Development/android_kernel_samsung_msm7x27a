@@ -226,8 +226,6 @@ static int ath6kl_hif_proc_dbg_intr(struct ath6kl_device *dev)
 	ath6kl_read_fwlogs(dev->ar);
 	ath6kl_recovery_err_notify(dev->ar, ATH6KL_FW_ASSERT);
 
-	panic("ath6kl_firmware crash");
-
 	return ret;
 }
 

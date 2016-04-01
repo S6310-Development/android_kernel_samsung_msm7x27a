@@ -659,14 +659,6 @@ config SAMSUNG_JACK_GNDLDET
 	---help---
 	  This is 4 ploe EAR_JACK G-L detect driver for Samsung devices.
 
-config SAMSUNG_FM_SI4709
-    tristate "SI4709 FM radio driver for Samsung devices"
-    default n
-    ---help---
-     This is SI4709 FM radio driver for Samsung devices.
-
-     If unsure, say N.
-
 config FSAXXXX_USBSW
 	bool "Fairchild FSAxxxx USB switch Driver"
 	depends on I2C

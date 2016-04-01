@@ -1473,8 +1473,14 @@ static int __init adsp_init(void)
 #endif
 
 	msm_adsp_driver.driver.name = msm_adsp_driver_name;
+#ifdef CONFIG_MACH_ROY
+	preempt_disable();
+#endif
 	rc = platform_driver_register(&msm_adsp_driver);
 	MM_INFO("%s -- %d\n", msm_adsp_driver_name, rc);
+#ifdef CONFIG_MACH_ROY
+	preempt_enable();
+#endif
 	return rc;
 }
 
