@@ -271,8 +271,6 @@ static __s32 hidinput_calc_abs_res(const struct hid_field *field, __u16 code)
 	return logical_extents / physical_extents;
 }
 
-<<<<<<< HEAD
-=======
 #ifdef CONFIG_HID_BATTERY_STRENGTH
 static enum power_supply_property hidinput_battery_props[] = {
 	POWER_SUPPLY_PROP_PRESENT,
@@ -446,7 +444,6 @@ static void hidinput_cleanup_battery(struct hid_device *dev)
 }
 #endif	/* CONFIG_HID_BATTERY_STRENGTH */
 
->>>>>>> 58902be... Squashed update of kernel from 3.4.62 to 3.4.63
 static void hidinput_configure_usage(struct hid_input *hidinput, struct hid_field *field,
 				     struct hid_usage *usage)
 {
