@@ -534,8 +534,7 @@ int usb_match_one_id_intf(struct usb_device *dev,
 			  struct usb_host_interface *intf,
 			  const struct usb_device_id *id)
 {
-<<<<<<< HEAD
-	struct usb_host_interface *intf;
+	//struct usb_host_interface *intf;
 	struct usb_device *dev;
 
 	/* proc_connectinfo in devio.c may call us with id == NULL. */
@@ -548,8 +547,6 @@ int usb_match_one_id_intf(struct usb_device *dev,
 	if (!usb_match_device(dev, id))
 		return 0;
 
-=======
->>>>>>> 0e0de5d... Squashed update of kernel from 3.4.86 to 3.4.87
 	/* The interface class, subclass, and protocol should never be
 	 * checked for a match if the device class is Vendor Specific,
 	 * unless the match record specifies the Vendor ID. */
