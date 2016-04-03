@@ -1060,12 +1060,6 @@ static void report_features(struct hid_device *hid)
 
 	rep_enum = &hid->report_enum[HID_FEATURE_REPORT];
 	list_for_each_entry(rep, &rep_enum->report_list, list)
-<<<<<<< HEAD
-		for (i = 0; i < rep->maxfield; i++)
-			for (j = 0; j < rep->field[i]->maxusage; j++)
-				drv->feature_mapping(hid, rep->field[i],
-						     rep->field[i]->usage + j);
-=======
 		for (i = 0; i < rep->maxfield; i++) {
 
 			/* Ignore if report count is out of bounds. */
@@ -1081,7 +1075,6 @@ static void report_features(struct hid_device *hid)
 							     rep->field[i]->usage + j);
 			}
 		}
->>>>>>> 0e0de5d... Squashed update of kernel from 3.4.86 to 3.4.87
 }
 
 /*
