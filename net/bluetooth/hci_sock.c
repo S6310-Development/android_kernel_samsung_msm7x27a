@@ -815,15 +815,7 @@ static int hci_sock_getname(struct socket *sock, struct sockaddr *addr,
 	*addr_len = sizeof(*haddr);
 	haddr->hci_family = AF_BLUETOOTH;
 	haddr->hci_dev    = hdev->id;
-<<<<<<< HEAD
-<<<<<<< HEAD
 	haddr->hci_channel= hci_pi(sk)->channel;
-=======
-	haddr->hci_channel= 0;
->>>>>>> 4067e88... Squashed update of kernel from 3.4.0 to 3.4.42
-=======
-	haddr->hci_channel= 0;
->>>>>>> 4067e88... Squashed update of kernel from 3.4.0 to 3.4.42
 
 done:
 	release_sock(sk);

@@ -369,20 +369,8 @@ if ($hz eq '--can') {
 		die "Usage: $0 HZ\n";
 	}
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-	@val = @{$canned_values{$hz}};
-	if (!@val) {
-		@val = compute_values($hz);
-	}
-=======
 	$cv = $canned_values{$hz};
 	@val = defined($cv) ? @$cv : compute_values($hz);
->>>>>>> 4067e88... Squashed update of kernel from 3.4.0 to 3.4.42
-=======
-	$cv = $canned_values{$hz};
-	@val = defined($cv) ? @$cv : compute_values($hz);
->>>>>>> 4067e88... Squashed update of kernel from 3.4.0 to 3.4.42
 	output($hz, @val);
 }
 exit 0;
