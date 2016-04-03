@@ -1783,11 +1783,6 @@ int __netlink_dump_start(struct sock *ssk, struct sk_buff *skb,
 		ret = -EBUSY;
 		goto out;
 	}
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-=======
->>>>>>> 4067e88... Squashed update of kernel from 3.4.0 to 3.4.42
 	/* add reference of module which cb->dump belongs to */
 	if (!try_module_get(cb->module)) {
 		mutex_unlock(nlk->cb_mutex);
@@ -1795,10 +1790,6 @@ int __netlink_dump_start(struct sock *ssk, struct sk_buff *skb,
 		ret = -EPROTONOSUPPORT;
 		goto out;
 	}
-<<<<<<< HEAD
->>>>>>> 4067e88... Squashed update of kernel from 3.4.0 to 3.4.42
-=======
->>>>>>> 4067e88... Squashed update of kernel from 3.4.0 to 3.4.42
 
 	nlk->cb = cb;
 	mutex_unlock(nlk->cb_mutex);
