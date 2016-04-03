@@ -843,17 +843,12 @@ static void __exit zram_exit(void)
 
 		get_disk(zram->disk);
 		destroy_device(zram);
-<<<<<<< HEAD
-		if (zram->init_done)
-			zram_reset_device(zram);
-=======
 		/*
 		 * Shouldn't access zram->disk after destroy_device
 		 * because destroy_device already released zram->disk.
 		 */
 		zram_reset_device(zram, false);
 		put_disk(zram->disk);
->>>>>>> 7b916f9... Squashed update of kernel from 3.4.91 to 3.4.92
 	}
 
 	unregister_blkdev(zram_major, "zram");
