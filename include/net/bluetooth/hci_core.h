@@ -1380,10 +1380,7 @@ u8 hci_le_conn_update(struct hci_conn *conn, u16 min, u16 max, u16 latency,
 		      u16 to_multiplier);
 void hci_le_start_enc(struct hci_conn *conn, __le16 ediv, __le64 rand,
 							__u8 ltk[16]);
-<<<<<<< HEAD
-=======
 void hci_le_ltk_neg_reply(struct hci_conn *conn);
->>>>>>> ec0533e... Squashed update of kernel from 3.4.97 to 3.4.98
 
 int hci_update_random_address(struct hci_request *req, bool require_privacy,
 			      u8 *own_addr_type);
