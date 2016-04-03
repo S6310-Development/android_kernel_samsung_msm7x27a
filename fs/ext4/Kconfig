@@ -93,4 +93,3 @@ config EXT4_HUAWEI_DEBUG
 
 	  If you select Y here, then you will be able to turn on saving
 	  kernel log to internal sd card when ext4 filesystem happens error
->>>>>>> aa94acd... Squashed update of kernel from 3.4.43 to 3.4.44
