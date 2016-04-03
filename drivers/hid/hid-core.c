@@ -381,15 +381,10 @@ static int hid_parser_global(struct hid_parser *parser, struct hid_item *item)
 
 	case HID_GLOBAL_ITEM_TAG_REPORT_ID:
 		parser->global.report_id = item_udata(item);
-<<<<<<< HEAD
-		if (parser->global.report_id == 0) {
-			dbg_hid("report_id 0 is invalid\n");
-=======
 		if (parser->global.report_id == 0 ||
 		    parser->global.report_id >= HID_MAX_IDS) {
 			hid_err(parser->device, "report_id %u is invalid\n",
 				parser->global.report_id);
->>>>>>> 58902be... Squashed update of kernel from 3.4.62 to 3.4.63
 			return -1;
 		}
 		return 0;
