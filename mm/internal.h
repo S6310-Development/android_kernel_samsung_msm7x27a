@@ -342,8 +342,6 @@ extern u64 hwpoison_filter_flags_mask;
 extern u64 hwpoison_filter_flags_value;
 extern u64 hwpoison_filter_memcg;
 extern u32 hwpoison_filter_enable;
-<<<<<<< HEAD
-=======
 
 extern void set_pageblock_order(void);
 
@@ -359,5 +357,4 @@ extern void set_pageblock_order(void);
 #define ALLOC_HARDER		0x10 /* try to alloc harder */
 #define ALLOC_HIGH		0x20 /* __GFP_HIGH set */
 #define ALLOC_CPUSET		0x40 /* check for correct cpuset */
-#define ALLOC_CMA		0x80 /* allow allocations from CMA areas */
->>>>>>> e71ab3b... Squashed update of kernel from 3.4.80 to 3.4.81
+#define ALLOC_CMA		0x80 /* allow allocations from CMA areas */]
