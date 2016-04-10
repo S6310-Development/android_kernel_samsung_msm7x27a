@@ -534,19 +534,6 @@ int usb_match_one_id_intf(struct usb_device *dev,
 			  struct usb_host_interface *intf,
 			  const struct usb_device_id *id)
 {
-	//struct usb_host_interface *intf;
-	struct usb_device *dev;
-
-	/* proc_connectinfo in devio.c may call us with id == NULL. */
-	if (id == NULL)
-		return 0;
-
-	intf = interface->cur_altsetting;
-	dev = interface_to_usbdev(interface);
-
-	if (!usb_match_device(dev, id))
-		return 0;
-
 	/* The interface class, subclass, and protocol should never be
 	 * checked for a match if the device class is Vendor Specific,
 	 * unless the match record specifies the Vendor ID. */

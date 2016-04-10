@@ -2241,6 +2241,7 @@ static int msm_close(struct file *f)
 	if (pcam_inst->streamon) {
 		/*something went wrong since instance
 		is closing without streamoff*/
+		pr_err("%s: ERROR closing without streamoff %d\n", __func__, rc);
 		msm_cam_stop_hardware(pcam);
 	}
 
