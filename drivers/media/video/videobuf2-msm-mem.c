@@ -39,11 +39,11 @@
 		BUG();                  \
 	}
 
-#ifdef CONFIG_MSM_CAMERA_DEBUG
-#define D(fmt, args...) pr_debug("videobuf-msm-mem: " fmt, ##args)
-#else
+//#ifdef CONFIG_MSM_CAMERA_DEBUG
+//#define D(fmt, args...) pr_debug("videobuf-msm-mem: " fmt, ##args)
+//#else
 #define D(fmt, args...) do {} while (0)
-#endif
+//#endif
 
 static unsigned long msm_mem_allocate(struct videobuf2_contig_pmem *mem)
 {

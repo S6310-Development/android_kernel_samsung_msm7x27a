@@ -3632,7 +3632,6 @@ again:
 			ring_buffer_put(rb); /* can't be last, we still have one */
 		}
 		mutex_unlock(&event->mmap_mutex);
-		put_event(event);
 
 		/*
 		 * Restart the iteration; either we're on the wrong list or
