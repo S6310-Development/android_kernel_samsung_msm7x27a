@@ -1,4 +1,4 @@
-/* Copyright (c) 2011-2012, Code Aurora Forum. All rights reserved.
+/* Copyright (c) 2011-2012, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -265,14 +265,24 @@ int msm_camera_enable_vreg(struct device *dev, struct camera_vreg_t *cam_vreg,
 			}
 		}
 	} else {
-		for (i = num_vreg-1; i >= 0; i--)
+		for (i = num_vreg-1; i >= 0; i--) {
+			if(IS_ERR(reg_ptr[i])) {
+				pr_err("%s: %s null regulator\n",
+					__func__, cam_vreg[i].reg_name);
+				return -EINVAL;
+			}
 			regulator_disable(reg_ptr[i]);
+		}
 	}
 	return rc;
 disable_vreg:
 	for (i--; i >= 0; i--) {
+		if(IS_ERR(reg_ptr[i])) {
+			pr_err("%s: %s null regulator\n",
+					__func__, cam_vreg[i].reg_name);
+			return -EINVAL;
+		}
 		regulator_disable(reg_ptr[i]);
-		goto disable_vreg;
 	}
 	return rc;
 }

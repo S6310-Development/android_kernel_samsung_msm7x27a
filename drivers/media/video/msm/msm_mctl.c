@@ -1,4 +1,4 @@
-/* Copyright (c) 2011-2012, Code Aurora Forum. All rights reserved.
+/* Copyright (c) 2011-2012, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -189,6 +189,20 @@ static int msm_mctl_set_vfe_output_mode(struct msm_cam_media_controller
 	return rc;
 }
 
+static uint8_t msm_sensor_state_check(
+	struct msm_cam_media_controller *p_mctl)
+{
+	struct msm_sensor_ctrl_t *s_ctrl = NULL;
+	if (!p_mctl)
+		return 0;
+	if (!p_mctl->sensor_sdev)
+		return 0;
+	s_ctrl = get_sctrl(p_mctl->sensor_sdev);
+	if (s_ctrl->sensor_state == MSM_SENSOR_POWER_UP)
+		return 1;
+	return 0;
+}
+
 /* called by the server or the config nodes to handle user space
 	commands*/
 static int msm_mctl_cmd(struct msm_cam_media_controller *p_mctl,
@@ -356,19 +370,17 @@ static int msm_mctl_cmd(struct msm_cam_media_controller *p_mctl,
 		break;
 	}
 
-	case MSM_CAM_IOCTL_FLASH_CTRL: 
-	/*
-	{
+	case MSM_CAM_IOCTL_FLASH_CTRL: {
 		struct flash_ctrl_data flash_info;
 		if (copy_from_user(&flash_info, argp, sizeof(flash_info))) {
 			ERR_COPY_FROM_USER();
 			rc = -EFAULT;
 		} else {
-			rc = msm_flash_ctrl(p_mctl->sdata, &flash_info);
+			if (msm_sensor_state_check(p_mctl))
+				rc = msm_flash_ctrl(p_mctl->sdata, &flash_info);
 		}
 		break;
 	}
-	*/ //Don't use qcom flash
 	case MSM_CAM_IOCTL_PICT_PP:
 		rc = msm_mctl_set_pp_key(p_mctl, (void __user *)arg);
 		break;
@@ -921,12 +933,9 @@ static int msm_mctl_dev_open(struct file *f)
 	}
 
 	D("%s active %d\n", __func__, pcam->mctl_node.active);
-	rc = msm_setup_v4l2_event_queue(&pcam_inst->eventHandle,
-					pcam->mctl_node.pvdev);
-	if (rc < 0) {
-		mutex_unlock(&pcam->mctl_node.dev_lock);
-		return rc;
-	}
+	msm_setup_v4l2_event_queue(&pcam_inst->eventHandle,
+			pcam->mctl_node.pvdev);
+
 	pcam_inst->vbqueue_initialized = 0;
 	kref_get(&pmctl->refcount);
 	f->private_data = &pcam_inst->eventHandle;
@@ -1009,8 +1018,7 @@ static int msm_mctl_dev_close(struct file *f)
 		vb2_queue_release(&pcam_inst->vid_bufq);
 	D("%s Closing down instance %p ", __func__, pcam_inst);
 	pcam->mctl_node.dev_inst[pcam_inst->my_index] = NULL;
-	v4l2_fh_del(&pcam_inst->eventHandle);
-	v4l2_fh_exit(&pcam_inst->eventHandle);
+	msm_destroy_v4l2_event_queue(&pcam_inst->eventHandle);
 	mutex_destroy(&pcam_inst->inst_lock);
 
 	kfree(pcam_inst);

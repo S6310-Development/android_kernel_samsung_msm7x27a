@@ -154,6 +154,11 @@ struct msm_sensor_csi_info {
 	uint8_t is_csic;
 };
 
+enum msm_sensor_state {
+	MSM_SENSOR_POWER_UP,
+	MSM_SENSOR_POWER_DOWN,
+};
+
 struct msm_sensor_ctrl_t {
 	struct  msm_camera_sensor_info *sensordata;
 	struct i2c_client *msm_sensor_client;
@@ -178,6 +183,7 @@ struct msm_sensor_ctrl_t {
 	uint32_t fps_divider;
 	enum msm_sensor_resolution_t curr_res;
 	enum msm_sensor_cam_mode_t cam_mode;
+	enum msm_sensor_state sensor_state;
 
 	struct mutex *msm_sensor_mutex;
 	struct msm_camera_csi2_params *curr_csi_params;

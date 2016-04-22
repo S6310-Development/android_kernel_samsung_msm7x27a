@@ -157,6 +157,15 @@
 
 #define MSM_MAX_CAMERA_SENSORS  5
 #define MAX_SENSOR_NAME 32
+#define MAX_CAM_NAME_SIZE 32
+#define MAX_ACT_MOD_NAME_SIZE 32
+#define MAX_ACT_NAME_SIZE 32
+#define NUM_ACTUATOR_DIR 2
+#define MAX_ACTUATOR_SCENARIO 8
+#define MAX_ACTUATOR_REGION 5
+#define MAX_ACTUATOR_INIT_SET 12
+#define MAX_ACTUATOR_TYPE_SIZE 32
+#define MAX_ACTUATOR_REG_TBL_SIZE 8
 
 #define MSM_MAX_CAMERA_CONFIGS 2
 
@@ -621,8 +630,19 @@ struct msm_snapshot_pp_status {
 #define CFG_SENSOR_INIT    29
 #define CFG_GET_3D_CALI_DATA 30
 #define CFG_GET_CALIB_DATA		31
-#define CFG_MAX			32
-
+#define CFG_GET_OUTPUT_INFO		32
+#define CFG_GET_EEPROM_INFO		33
+#define CFG_GET_EEPROM_DATA		34
+#define CFG_SET_ACTUATOR_INFO		35
+#define CFG_GET_ACTUATOR_INFO           36
+/* TBD: QRD */
+#define CFG_SET_ISO                   37
+#define CFG_START_STREAM              38
+#define CFG_STOP_STREAM               39
+#define CFG_GET_CSI_PARAMS            40
+#define CFG_SET_PREVIEW_SIZE          41
+#define CFG_SET_PICTURE_SIZE          42
+#define CFG_MAX			43
 
 #define MOVE_NEAR	0
 #define MOVE_FAR	1
@@ -893,12 +913,85 @@ struct sensor_cfg_data {
 	} cfg;
 };
 
+struct damping_params_t {
+	uint32_t damping_step;
+	uint32_t damping_delay;
+	uint32_t hw_params;
+};
+
+enum actuator_type {
+	ACTUATOR_VCM,
+	ACTUATOR_PIEZO,
+};
+
+enum msm_actuator_data_type {
+	MSM_ACTUATOR_BYTE_DATA = 1,
+	MSM_ACTUATOR_WORD_DATA,
+};
+
+enum msm_actuator_addr_type {
+	MSM_ACTUATOR_BYTE_ADDR = 1,
+	MSM_ACTUATOR_WORD_ADDR,
+};
+
+enum msm_actuator_write_type {
+	MSM_ACTUATOR_WRITE_HW_DAMP,
+	MSM_ACTUATOR_WRITE_DAC,
+	MSM_ACTUATOR_WRITE_DAC_AD5823,
+};
+
+struct msm_actuator_reg_params_t {
+	enum msm_actuator_write_type reg_write_type;
+	uint32_t hw_mask;
+	uint16_t reg_addr;
+	uint16_t hw_shift;
+	uint16_t data_shift;
+};
+
+struct reg_settings_t {
+	uint16_t reg_addr;
+	uint16_t reg_data;
+};
+
+struct region_params_t {
+	/* [0] = ForwardDirection Macro boundary
+	   [1] = ReverseDirection Inf boundary
+	 */
+	uint16_t step_bound[2];
+	uint16_t code_per_step;
+};
+
 struct msm_actuator_move_params_t {
 	int8_t dir;
+	int8_t sign_dir;
+	int16_t dest_step_pos;
 	int32_t num_steps;
+	struct damping_params_t *ringing_params;
+};
+
+struct msm_actuator_tuning_params_t {
+	int16_t initial_code;
+	uint16_t pwd_step;
+	uint16_t region_size;
+	uint32_t total_steps;
+	struct region_params_t *region_params;
+};
+
+struct msm_actuator_params_t {
+	enum actuator_type act_type;
+	uint8_t reg_tbl_size;
+	uint16_t data_size;
+	uint16_t init_setting_size;
+	uint32_t i2c_addr;
+	enum msm_actuator_addr_type i2c_addr_type;
+	enum msm_actuator_data_type i2c_data_type;
+	struct msm_actuator_reg_params_t *reg_tbl_params;
+	struct reg_settings_t *init_settings;
 };
 
 struct msm_actuator_set_info_t {
+	struct msm_actuator_params_t actuator_params;
+	struct msm_actuator_tuning_params_t af_tuning_params;
 	uint32_t total_steps;
 	uint16_t gross_steps;
 	uint16_t fine_steps;
