@@ -42,12 +42,18 @@ config OV5640
 	default n
 	---help---
 	Omni 5M YUV Sensor
-
 config OV5647
 	bool "Sensor ov5647 (BAYER 5M)"
 	depends on MSM_CAMERA
 	---help---
 	  OV 5M Bayer Sensor with AutoFocus
+
+config SR300PC20
+	bool "Sensor sr300pc20 (3M)"
+	depends on MSM_CAMERA
+	default n
+	---help---
+	  SiliconFile 3M Sensor
 
 config AD5046_ACT
 	bool "Lens actuator ad5046"
@@ -139,44 +145,16 @@ config IMX074_ACT
 config S5K3E2FX
 	bool "Sensor s5k3e2fx (Samsung 5M)"
 	depends on MSM_CAMERA && !ARCH_MSM8X60 && !MSM_CAMERA_V4L2
-	default n
+	default y
 	---help---
 	  Samsung 5M with Autofocus
 
 config QS_S5K4E1
 	bool "Sensor qs_s5k4e1 (Samsung 5M)"
 	depends on MSM_CAMERA && ARCH_MSM8X60 && !MSM_CAMERA_V4L2
-	default n
+	default y
 	---help---
 	  Samsung 5M with Autofocus
-
-config S5K4ECGX
-	bool "Sensor s5k4ecgx (5M)"
-	depends on MSM_CAMERA
-	default n
-	---help---
-	  LSI 5M Sensor with Autofocus
-
-config S5K5CCGX
-	bool "Sensor s5k5ccgx (3M)"
-	depends on MSM_CAMERA
-	default n 
-	---help---
-	  LSI 3M Sensor with Autofocus
-
-config SR300PC20
-	bool "Sensor sr300pc20 (3M)"
-	depends on MSM_CAMERA
-	default n
-	---help---
-	  SiliconFile 3M Sensor
-
-config SR200PC20
-	bool "Sensor sr200pc20 (2M)"
-	depends on MSM_CAMERA
-	default n
-	---help---
-	  SiliconFile 2M Sensor
 
 config S5K4E1
 	bool "Sensor Sensor s5k4e1 (Samsung 5M)"
@@ -214,6 +192,13 @@ config MSM_CAMERA_FLASH_TPS61310
 	  It is a Texas Instruments multiple LED Flash
 	  for camera flash and video light applications.
 
+config SR300PC20
+        bool "Sensor sr300pc20 (3M)"
+        depends on MSM_CAMERA_LEGACY && !ARCH_MSM8X60 && !MSM_CAMERA_V4L2
+        default n
+        ---help---
+          Siliconfile 3M Sensor with Autofocus
+
 config IMX072
 	bool "Sensor imx072 (Sony 5M)"
 	default n
@@ -241,13 +226,6 @@ config VB6801
 	depends on MSM_CAMERA && !ARCH_MSM8X60 && !MSM_CAMERA_V4L2
 	---help---
 	  5M with flash
-	  
-config SR030PC50
-	bool "Sensor sr030pc50 (VGA)"
-	depends on MSM_CAMERA
-	default n
-	---help---
-	  SiliconFile VGA Sensor
 
 config MSM_CAMERA_FLASH
 	bool "Qualcomm MSM camera flash support"
@@ -330,3 +308,15 @@ config OV7692
 	depends on MSM_CAMERA
 	---help---
 	  Omni Vision VGA YUV Sensor
+config OV7695
+	bool "Sensor OV7695 (VGA YUV)"
+	depends on MSM_CAMERA && MSM_CAMERA_V4L2
+	default n
+	---help---
+	  Omni Vision VGA YUV Sensor for QRD Devices
+config OV7695_RAW
+	bool "Sensor OV7695 (RAW)"
+	depends on MSM_CAMERA && MSM_CAMERA_V4L2
+	default n
+	---help---
+	  Omni Vision BAYER Sensor for QRD Devices

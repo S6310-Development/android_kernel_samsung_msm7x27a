@@ -20,7 +20,7 @@
 #include <linux/slab.h>
 #include <media/msm_camera.h>
 #include <media/v4l2-subdev.h>
-#include <mach/gpio.h>
+#include <linux/gpio.h>
 #include <mach/camera.h>
 
 #include <asm/mach-types.h>

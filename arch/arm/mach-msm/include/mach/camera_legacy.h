@@ -89,13 +89,13 @@ enum vpe_resp_msg {
 	VPE_MSG_OUTPUT_ST_L,
 	VPE_MSG_OUTPUT_ST_R,
 };
-
+/*
 enum msm_camera_type {
 	BACK_CAMERA_2D,
 	FRONT_CAMERA_2D,
 	BACK_CAMERA_3D,
 };
-
+*/
 enum msm_stereo_state {
 	STEREO_VIDEO_IDLE,
 	STEREO_VIDEO_ACTIVE,

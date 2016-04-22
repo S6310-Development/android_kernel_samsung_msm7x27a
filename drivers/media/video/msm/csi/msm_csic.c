@@ -1,4 +1,4 @@
-/* Copyright (c) 2012, Code Aurora Forum. All rights reserved.
+/* Copyright (c) 2012, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -149,6 +149,8 @@ static int msm_csic_config(struct csic_cfg_params *cfg_params)
 	csicbase = csic_dev->base;
 	csic_params = cfg_params->parms;
 
+	if(csicbase == NULL)
+		return rc;
 	/* Enable error correction for DATA lane. Applies to all data lanes */
 	msm_camera_io_w(0x4, csicbase + MIPI_PHY_CONTROL);
 
@@ -222,9 +224,6 @@ static irqreturn_t msm_csic_irq(int irq_num, void *data)
 {
 	uint32_t irq;
 	struct csic_device *csic_dev = data;
-
-	if (!csic_dev->base) 
-		  return IRQ_HANDLED; 
 
 	pr_info("msm_csic_irq: %x\n", (unsigned int)csic_dev->base);
 	irq = msm_camera_io_r(csic_dev->base + MIPI_INTERRUPT_STATUS);
