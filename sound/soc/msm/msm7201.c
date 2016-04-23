@@ -147,8 +147,8 @@ int msm_snd_rpc_connect(void)
 	snd_ep = msm_rpc_connect_compatible(snd_rpc_ids.prog,
 				snd_rpc_ids.vers, 0);
 	if (IS_ERR(snd_ep)) {
-		printk(KERN_DEBUG "%s failed (compatible VERS = %ld) \
-				 trying again with another API\n",
+		printk(KERN_DEBUG "%s failed (compatible VERS = %ld)"
+				 "trying again with another API\n",
 				__func__, snd_rpc_ids.vers);
 		snd_ep =
 			msm_rpc_connect_compatible(snd_rpc_ids.prog,

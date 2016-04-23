@@ -3,7 +3,7 @@
  * interface to "snd" service on the baseband cpu
  * This code also borrows from snd.c, which is
  * Copyright (C) 2008 HTC Corporation
- * Copyright (c) 2009, 2012 Code Aurora Forum. All rights reserved.
+ * Copyright (c) 2009, 2012 The Linux Foundation. All rights reserved.
  *
  * This software is licensed under the terms of the GNU General Public
  * License version 2, as published by the Free Software Foundation, and
@@ -58,13 +58,21 @@ static struct snd_curr_dev_info curr_dev;
 
 #define RPC_SND_VERS	0x00030003
 
-/* Add mute function to remove noise on dualstanby project - soon9.lee */
-#define SND_CAD_SET_MUTE_PROC 100
-
 #define SND_CAD_SET_DEVICE_PROC 40
 #define SND_CAD_SET_VOLUME_PROC 39
 #define MAX_SND_ACTIVE_DEVICE 2
 
+//LGE_CHANGE_S, [youngbae.choi@lge.com] , 2011-12-08
+#if defined (CONFIG_MACH_LGE)
+#define SND_SET_LOOPBACK_MODE_PROC 61
+/* LGE_CHANGE_S :  2011-12-30, gt.kim@lge.com, Description: Bluetooth NERC Cmd Support */
+#define SND_SET_NREC_PROC 77
+/* LGE_CHANGE_E :  Bluetooth NERC Cmd Support*/
+/* LGE_CHANGE_S :  2012-01-26, gt.kim@lge.com, Description:  Display Service Type */
+#define SND_GET_SERVICE_TYPE_PROC	78
+/* LGE_CHANGE_E :   Display Service Type*/
+#endif
+//LGE_CHANGE_E, [youngbae.choi@lge.com] , 2011-12-08
 struct rpc_cad_set_device_args {
 	struct cad_devices_type device;
 	uint32_t ear_mute;
@@ -94,6 +102,74 @@ struct snd_cad_set_volume_msg {
 };
 
 struct cad_endpoint *get_cad_endpoints(int *size);
+//LGE_CHANGE_S, [youngbae.choi@lge.com] , 2011-12-08
+#if defined (CONFIG_MACH_LGE)
+struct snd_set_loopback_param_rep {
+	struct rpc_reply_hdr hdr;
+	uint32_t get_mode;
+} lrep_cad;
+
+struct rpc_snd_set_loopback_mode_args {
+	uint32_t mode;
+	uint32_t cb_func;
+	uint32_t client_data;
+};
+
+struct snd_set_loopback_mode_msg {
+	struct rpc_request_hdr hdr;
+	struct rpc_snd_set_loopback_mode_args args;
+};
+
+/* LGE_CHANGE_S :  2012-1-2, gt.kim@lge.com, Description: Bluetooth NERC Cmd Support */
+struct rpc_snd_set_bt_nerc_mode_args {
+	uint32_t mode;
+	uint32_t cb_func;
+	uint32_t client_data;
+};
+
+struct snd_set_bt_nerc_mode_msg {
+	struct rpc_request_hdr hdr;
+	struct rpc_snd_set_bt_nerc_mode_args args;
+};
+
+struct snd_set_bt_nerc_mode_rep {
+	struct rpc_reply_hdr hdr;
+	uint32_t get_mode;
+}bt_nerc_rep;
+
+/* LGE_CHANGE_E :  Bluetooth NERC Cmd Support */
+
+/* LGE_CHANGE_S :  2012-01-26, gt.kim@lge.com, Description:  Display Service Type */
+int service_type;
+struct rpc_snd_get_service_type_args {
+	uint32_t cb_func;
+	uint32_t client_data;
+};
+
+struct snd_get_service_type_msg{
+	struct rpc_request_hdr hdr;
+	struct rpc_snd_get_service_type_args args;
+};
+
+struct snd_get_service_type_rep {
+	struct rpc_reply_hdr hdr;
+	uint32_t get_service;
+}get_service_rep;
+/* LGE_CHANGE_E :   Display Service Type*/
+
+union snd_set_union_param_msg{
+	struct snd_set_loopback_mode_msg lbmsg;
+/* LGE_CHANGE_S :  2012-1-2, gt.kim@lge.com, Description: Bluetooth NERC Cmd Support */
+	struct snd_set_bt_nerc_mode_msg bt_nerc;
+/* LGE_CHANGE_E :  Bluetooth NERC Cmd Support */
+
+/* LGE_CHANGE_S :  2012-01-26, gt.kim@lge.com, Description:  Display Service Type */
+	struct snd_get_service_type_msg get_service;
+/* LGE_CHANGE_E :   Display Service Type*/
+};
+
+#endif
+//LGE_CHANGE_E, [youngbae.choi@lge.com] , 2011-12-08
 
 #ifdef CONFIG_DEBUG_FS
 static struct dentry *dentry;
@@ -200,18 +276,9 @@ static int rtc_debugfs_create_entry()
 }
 #endif
 
-#if defined(CONFIG_SAMSUNG_ALLSOUND_MUTE)
-#define SND_MUTE_RxMUTED 3
-#define SND_MUTE_RxUNMUTED 4
-#endif
-
 static inline int check_mute(int mute)
 {
 	return (mute == SND_MUTE_MUTED ||
-#if defined(CONFIG_SAMSUNG_ALLSOUND_MUTE)
-		(mute == SND_MUTE_RxMUTED) ||
-		(mute == SND_MUTE_RxUNMUTED) ||
-#endif
 		mute == SND_MUTE_UNMUTED) ? 0 : -EINVAL;
 }
 
@@ -253,6 +320,15 @@ static long snd_cad_ioctl(struct file *file, unsigned int cmd,
 	struct msm_cad_device_config dev;
 	struct msm_cad_volume_config vol;
 	struct snd_cad_ctxt *snd = file->private_data;
+//LGE_CHANGE_S, [youngbae.choi@lge.com] , 2011-12-08
+#if defined (CONFIG_MACH_LGE)
+	struct msm_snd_set_loopback_mode_param loopback;
+/* LGE_CHANGE_S :  2012-01-05, gt.kim@lge.com, Decription: Bluetooth NERC Cmd Support */	
+    struct msm_snd_set_bt_nerc_param bt_nerc;
+/* LGE_CHANGE_E :Bluetooth NERC Cmd Support*/	
+	union snd_set_union_param_msg umsg;
+#endif
+/*LGE_CHANBE_E : jaz.john@lge.com kernel3.0 porting based on kernel2.6.38*/
 	int rc = 0;
 
 	mutex_lock(&snd->lock);
@@ -279,7 +355,7 @@ static long snd_cad_ioctl(struct file *file, unsigned int cmd,
 		dmsg.args.client_data = 0;
 		curr_dev.tx_dev = dev.device.tx_device;
 		curr_dev.rx_dev = dev.device.rx_device;
-		MM_ERR("snd_cad_set_device %d %d %d %d\n", dev.device.rx_device,
+		MM_DBG("snd_cad_set_device %d %d %d %d\n", dev.device.rx_device,
 			dev.device.tx_device, dev.ear_mute, dev.mic_mute);
 
 		rc = msm_rpc_call(snd->ept,
@@ -297,21 +373,18 @@ static long snd_cad_ioctl(struct file *file, unsigned int cmd,
 		vmsg.args.device.rx_device = cpu_to_be32(dev.device.rx_device);
 		vmsg.args.device.tx_device = cpu_to_be32(dev.device.tx_device);
 		vmsg.args.method = cpu_to_be32(vol.method);
-#if !defined(CONFIG_MACH_ARUBA_OPEN) && !defined(CONFIG_MACH_ARUBASLIM_OPEN) && !defined(CONFIG_MACH_ARUBA_DUOS_CTC)  \
-      && !defined(CONFIG_MACH_KYLEPLUS_CTC) && !defined(CONFIG_MACH_INFINITE_DUOS_CTC) \
-      && !defined(CONFIG_MACH_KYLEPLUS_OPEN) && !defined(CONFIG_MACH_BAFFIN_DUOS_CTC) \
-      && !defined(CONFIG_MACH_DELOS_DUOS_CTC) && !defined(CONFIG_MACH_NEVIS3G) && !defined(CONFIG_MACH_DELOS_OPEN) 
-		if (vol.method != SND_METHOD_VOICE) {
-			MM_ERR("set volume: invalid method\n");
+		if (vol.method != SND_METHOD_VOICE &&
+				vol.method != SND_METHOD_MIDI) {
+			MM_ERR("set volume: invalid method %d\n", vol.method);
 			rc = -EINVAL;
 			break;
 		}
-#endif
+
 		vmsg.args.volume = cpu_to_be32(vol.volume);
 		vmsg.args.cb_func = -1;
 		vmsg.args.client_data = 0;
 
-		MM_ERR("snd_cad_set_volume %d %d %d %d\n", vol.device.rx_device,
+		MM_DBG("snd_cad_set_volume %d %d %d %d\n", vol.device.rx_device,
 				vol.device.tx_device, vol.method, vol.volume);
 
 		rc = msm_rpc_call(snd->ept,
@@ -332,28 +405,98 @@ static long snd_cad_ioctl(struct file *file, unsigned int cmd,
 		rc = get_endpoint(snd, arg);
 		break;
 
-	case CAD_SET_MUTE: 
-		if (copy_from_user(&dev, (void __user *) arg, sizeof(dev))) {
-			MM_ERR("set device: invalid pointer\n");
+/*LGE_CHANBE_S : seven.kim@lge.com kernel3.0 porting based on kernel2.6.38*/
+#if defined (CONFIG_MACH_LGE)
+	case SND_SET_LOOPBACK_MODE:
+		if (copy_from_user(&loopback, (void __user *) arg, sizeof(loopback))) {
+			pr_err("snd_ioctl set_loopback_mode: invalid pointer.\n");
 			rc = -EFAULT;
 			break;
 		}
 
-		dmsg.args.device.rx_device = cpu_to_be32(dev.device.rx_device);
-		dmsg.args.device.tx_device = cpu_to_be32(dev.device.tx_device);
-		dmsg.args.device.pathtype = cpu_to_be32(dev.device.pathtype);
-		dmsg.args.ear_mute = cpu_to_be32(dev.ear_mute);
-		dmsg.args.mic_mute = cpu_to_be32(dev.mic_mute);
-		dmsg.args.cb_func = -1;
-		dmsg.args.client_data = 0;
+		umsg.lbmsg.args.mode = cpu_to_be32(loopback.mode);
+		umsg.lbmsg.args.cb_func = -1;
+		umsg.lbmsg.args.client_data = 0;
 
-		MM_ERR("snd_cad_set_mute %d %d %d %d\n", dev.device.rx_device,
-			dev.device.tx_device, dev.ear_mute, dev.mic_mute);
-		
+
+
 		rc = msm_rpc_call(snd->ept,
-			SND_CAD_SET_MUTE_PROC,
-			&dmsg, sizeof(dmsg), 5 * HZ);
+			SND_SET_LOOPBACK_MODE_PROC,
+			&umsg.lbmsg, sizeof(umsg.lbmsg), 5 * HZ);
+
+		if (rc < 0) {
+			printk(KERN_ERR "%s:rpc err because of %d\n", __func__, rc);
+		} else {
+			loopback.get_param = be32_to_cpu(lrep_cad.get_mode);
+			printk(KERN_INFO "%s:loopback mode ->%d\n", __func__, loopback.get_param);
+			if (copy_to_user((void __user *)arg, &loopback, sizeof(loopback))) {
+				pr_err("snd_ioctl get loopback mode: invalid write pointer.\n");
+				rc = -EFAULT;
+			}
+		}
+	break;
+
+/* LGE_CHANGE_S :  2012-01-26, gt.kim@lge.com, Description:  Display Service Type */
+	case SND_GET_SERVICE_TYPE:
+		umsg.get_service.args.cb_func = -1;
+		umsg.get_service.args.client_data = 0;
+
+		pr_info("get_service~~ \n");
+
+		rc = msm_rpc_call_reply(snd->ept,
+			SND_GET_SERVICE_TYPE_PROC,
+			&umsg.get_service, sizeof(umsg.get_service),&get_service_rep, sizeof(get_service_rep), 5 * HZ);
+
+		if (rc < 0){
+			printk(KERN_ERR "%s:rpc err because of %d\n", __func__, rc);
+		}
+		else
+		{
+			service_type = be32_to_cpu(get_service_rep.get_service);
+			printk(KERN_INFO "%s:get Service ->%d\n", __func__, service_type);
+			if (copy_to_user((void __user *)arg, &service_type, sizeof(service_type))) {
+				pr_err("snd_ioctl get service: invalid write pointer.\n");
+				rc = -EFAULT;
+			}
+		}
 		break;
+/* LGE_CHANGE_E :	Display Service Type*/
+/* LGE_CHANGE_S :  2011-12-30, gt.kim@lge.com, Description: Bluetooth NERC Cmd Support */
+case SND_SET_NREC:
+	if (copy_from_user(&bt_nerc, (void __user *) arg, sizeof(bt_nerc))) {
+		pr_err("snd_ioctl set_NREC: invalid pointer.\n");
+		rc = -EFAULT;
+		break;
+	}
+
+    umsg.bt_nerc.args.mode          = cpu_to_be32(bt_nerc.mode);
+    umsg.bt_nerc.args.cb_func       = -1;
+    umsg.bt_nerc.args.client_data   = 0;
+
+	pr_info("set_NREC %d \n", bt_nerc.mode);
+
+	rc = msm_rpc_call_reply(snd->ept,
+		SND_SET_NREC_PROC,
+		&umsg.bt_nerc, sizeof(umsg.bt_nerc),&bt_nerc_rep, sizeof(bt_nerc_rep), 5 * HZ);
+
+	if (rc < 0){
+		printk(KERN_ERR "%s:rpc err because of %d\n", __func__, rc);
+	}
+	else
+	{
+		bt_nerc.get_param = be32_to_cpu(bt_nerc_rep.get_mode);
+		printk(KERN_INFO "%s:NREC mode ->%d\n", __func__, bt_nerc.get_param);
+		if (copy_to_user((void __user *)arg, &bt_nerc, sizeof(bt_nerc))) {
+			pr_err("snd_ioctl get NREC mode: invalid write pointer.\n");
+			rc = -EFAULT;
+		}
+	}
+
+	break;
+/* LGE_CHANGE_E :  Bluetooth NERC Cmd Support */
+#endif
+/*LGE_CHANBE_E : seven.kim@lge.com kernel3.0 porting based on kernel2.6.38*/
+
 
 	default:
 		MM_ERR("unknown command\n");
@@ -476,7 +619,7 @@ static long snd_cad_vol_enable(const char *arg)
 	vmsg.args.device.rx_device = cpu_to_be32(vol.device.rx_device);
 	vmsg.args.device.tx_device = cpu_to_be32(vol.device.tx_device);
 	vmsg.args.method = cpu_to_be32(vol.method);
-	if (vol.method != SND_METHOD_VOICE) {
+	if (vol.method != SND_METHOD_VOICE && vol.method != SND_METHOD_MIDI) {
 		MM_ERR("snd_cad_ioctl set volume: invalid method\n");
 		rc = -EINVAL;
 		return rc;
@@ -487,7 +630,7 @@ static long snd_cad_vol_enable(const char *arg)
 	vmsg.args.client_data = 0;
 
 	MM_DBG("snd_cad_set_volume %d %d %d %d\n", vol.device.rx_device,
-			vol.device.rx_device, vol.method, vol.volume);
+			vol.device.tx_device, vol.method, vol.volume);
 
 	rc = msm_rpc_call(snd_cad_sys->ept,
 		SND_CAD_SET_VOLUME_PROC,
@@ -527,7 +670,7 @@ static long snd_cad_dev_enable(const char *arg)
 	curr_dev.tx_dev = dev.device.tx_device;
 	curr_dev.rx_dev = dev.device.rx_device;
 
-	MM_INFO("snd_cad_set_device %d %d %d %d\n", dev.device.rx_device,
+	MM_DBG("snd_cad_set_device %d %d %d %d\n", dev.device.rx_device,
 			dev.device.tx_device, dev.ear_mute, dev.mic_mute);
 
 	rc = msm_rpc_call(snd_cad_sys->ept,
