@@ -385,3 +385,24 @@ unsigned long get_ddr_size(void)
 
 	return ret;
 }
+
+static char * const memtype_names[] = {
+	[MEMTYPE_SMI_KERNEL] = "SMI_KERNEL",
+	[MEMTYPE_SMI]	= "SMI",
+	[MEMTYPE_EBI0] = "EBI0",
+	[MEMTYPE_EBI1] = "EBI1",
+};
+
+int msm_get_memory_type_from_name(const char *memtype_name)
+{
+	int i;
+
+	for (i = 0; i < ARRAY_SIZE(memtype_names); i++) {
+		if (memtype_names[i] &&
+		    strcmp(memtype_name, memtype_names[i]) == 0)
+			return i;
+	}
+
+	pr_err("Could not find memory type %s\n", memtype_name);
+	return -EINVAL;
+}
