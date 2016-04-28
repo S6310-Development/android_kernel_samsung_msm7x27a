@@ -553,7 +553,6 @@ void mdp4_overlay0_done_dsi_video(int cndx);
 void mdp4_overlay0_done_dsi_cmd(int cndx);
 void mdp4_primary_rdptr(void);
 void mdp4_dsi_cmd_overlay(struct msm_fb_data_type *mfd);
-int mdp4_overlay_commit(struct fb_info *info, int mixer);
 int mdp4_dsi_video_pipe_commit(void);
 int mdp4_dsi_cmd_pipe_commit(void);
 int mdp4_dsi_cmd_update_cnt(int cndx);
@@ -886,7 +885,6 @@ static inline void mdp_dsi_cmd_overlay_suspend(struct msm_fb_data_type *mfd)
 {
 	/* empty */
 }
-#endif
 #endif /* CONFIG_FB_MSM_MIPI_DSI */
 
 void mdp4_dsi_cmd_kickoff_ui(struct msm_fb_data_type *mfd,
