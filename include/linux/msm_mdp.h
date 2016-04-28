@@ -674,9 +674,6 @@ struct mdp_buf_sync {
 	int *retire_fen_fd;
 };
 
-<<<<<<< HEAD
-#define MDP_DISPLAY_COMMIT_OVERLAY 0x00000001
-=======
 struct mdp_async_blit_req_list {
 	struct mdp_buf_sync sync;
 	uint32_t count;
@@ -699,7 +696,6 @@ struct msmfb_cabc_config {
     uint32_t mov_det_on;
 };
 #endif
->>>>>>> 9a21666... msm_fb: Update msm_fb to msm-3.4 branch
 
 struct mdp_display_commit {
 	uint32_t flags;

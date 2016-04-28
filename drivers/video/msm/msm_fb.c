@@ -312,31 +312,6 @@ static struct struct_frame_buf_mark  frame_buf_mark = {
 };
 #endif
 
-static ssize_t msm_fb_fps_level_change(struct device *dev,
-				struct device_attribute *attr,
-				const char *buf, size_t count)
-{
-	struct fb_info *fbi = dev_get_drvdata(dev);
-	struct msm_fb_data_type *mfd = (struct msm_fb_data_type *)fbi->par;
-	struct msm_fb_panel_data *pdata =
-		(struct msm_fb_panel_data *)mfd->pdev->dev.platform_data;
-	unsigned long val;
-	int ret;
-
-	if (mfd->panel.type != MIPI_VIDEO_PANEL)
-		return -EINVAL;
-
-	ret = kstrtoul(buf, 10, &val);
-	if (ret)
-		return ret;
-
-	if ((val <= 0) || (val > 100))
-		return -EINVAL;
-	if (pdata->fps_level_change)
-		pdata->fps_level_change(mfd->pdev, (u32)val);
-	return count;
-}
-
 static ssize_t msm_fb_msm_fb_type(struct device *dev,
 				  struct device_attribute *attr, char *buf)
 {
