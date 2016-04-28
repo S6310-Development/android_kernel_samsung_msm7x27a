@@ -1,6 +1,3 @@
-#ifdef CONFIG_MSM_CAMERA_LEGACY
-#include "mach/camera_legacy.h"
-#else
 /* Copyright (c) 2009-2012, Code Aurora Forum. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
@@ -278,7 +275,6 @@ struct msm_sensor_ctrl {
 	int (*s_init)(const struct msm_camera_sensor_info *);
 	int (*s_release)(void);
 	int (*s_config)(void __user *);
-        int (*s_ext_config)(void __user *); // add for dual camera interface
 	enum msm_camera_type s_camera_type;
 	uint32_t s_mount_angle;
 	enum msm_st_frame_packing s_video_packing;
@@ -641,4 +637,3 @@ int msm_camera_config_gpio_table
 int msm_camera_request_gpio_table
 	(struct msm_camera_sensor_info *sinfo, int gpio_en);
 #endif
-#endif  /* CONFIG_MSM_CAMERA_LEGACY */

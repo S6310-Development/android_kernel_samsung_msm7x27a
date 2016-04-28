@@ -1,4 +1,4 @@
-/* Copyright (c) 2012, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2012, Code Aurora Forum. All rights reserved.
 *
 * This program is free software; you can redistribute it and/or modify
 * it under the terms of the GNU General Public License version 2 and
@@ -14,7 +14,7 @@
 #ifndef _WFD_ENC_SUBDEV_
 #define _WFD_ENC_SUBDEV_
 
-#include <linux/msm_ion.h>
+#include <linux/ion.h>
 #include <media/v4l2-subdev.h>
 #include <media/videobuf2-core.h>
 #define VENC_MAGIC_IOCTL 'V'

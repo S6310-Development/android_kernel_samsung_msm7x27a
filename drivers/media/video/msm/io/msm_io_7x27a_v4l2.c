@@ -1,4 +1,4 @@
-/* Copyright (c) 2012, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2012, Code Aurora Forum. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -90,6 +90,9 @@ void msm_camio_vfe_blk_reset_2(void)
 {
 	uint32_t val;
 
+	if(!appbase)
+		return;
+	
 	/* do apps reset */
 	val = readl_relaxed(appbase + 0x00000210);
 	val |= 0x1;
@@ -119,6 +122,9 @@ void msm_camio_vfe_blk_reset_3(void)
 	uint32_t val;
 
 	if (!apps_reset)
+		return;
+
+	if(!appbase)
 		return;
 
 	/* do apps reset */

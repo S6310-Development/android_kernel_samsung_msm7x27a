@@ -1,6 +1,3 @@
-#ifdef CONFIG_MSM_CAMERA_LEGACY
-#include "media/msm_camera_legacy.h"
-#else
 /* Copyright (c) 2009-2012, Code Aurora Forum. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
@@ -1484,7 +1481,6 @@ enum msm_actuator_addr_type {
 enum msm_actuator_write_type {
 	MSM_ACTUATOR_WRITE_HW_DAMP,
 	MSM_ACTUATOR_WRITE_DAC,
-	MSM_ACTUATOR_WRITE_DAC_AD5823,
 };
 
 struct msm_actuator_reg_params_t {
@@ -2162,4 +2158,3 @@ struct msm_camera_v4l2_ioctl_t {
 };
 
 #endif /* __LINUX_MSM_CAMERA_H */
-#endif /* CONFIG_MSM_CAMERA_LEGACY */

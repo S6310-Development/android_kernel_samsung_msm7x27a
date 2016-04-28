@@ -1,4 +1,4 @@
-/* Copyright (c) 2012, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2012, Code Aurora Forum. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -306,11 +306,11 @@ static struct msm_camera_i2c_reg_conf ov5647_recommend_settings[] = {
 	{0x583c, 0x24},
 	{0x583d, 0xce},
 	/* manual AWB,manual AE,close Lenc,open WBC*/
-	{0x3503, 0x07}, /*manual AE*/
-	{0x3501, 0x00},
-	{0x3502, 0x10},
+	{0x3503, 0x03}, /*manual AE*/
+	{0x3501, 0x10},
+	{0x3502, 0x80},
 	{0x350a, 0x00},
-	{0x350b, 0x00},
+	{0x350b, 0x7f},
 	{0x5001, 0x01}, /*manual AWB*/
 	{0x5180, 0x08},
 	{0x5186, 0x04},

@@ -1,4 +1,4 @@
-/* Copyright (c) 2012, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2012, Code Aurora Forum. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -14,6 +14,7 @@
 #include <linux/msm_adsp.h>
 #include <linux/uaccess.h>
 #include <linux/fs.h>
+#include <linux/android_pmem.h>
 #include <linux/slab.h>
 #include <linux/pm_qos.h>
 #include <linux/delay.h>
@@ -624,8 +625,10 @@ static void vfe_7x_ops(void *driver_data, unsigned id, size_t len,
 					msm_adsp_write(vfe_mod,
 							QDSP_CMDQUEUE,
 							cmd_data, len);
-					kfree(data);
-					return;
+					if (!vfe2x_ctrl->zsl_mode) {
+						kfree(data);
+						return;
+					}
 				}
 			} else { /* Live snapshot */
 				spin_unlock_irqrestore(
@@ -798,6 +801,12 @@ static void vfe_7x_ops(void *driver_data, unsigned id, size_t len,
 			vfe2x_ctrl->vfeFrameId++;
 			if (vfe2x_ctrl->vfeFrameId == 0)
 				vfe2x_ctrl->vfeFrameId = 1; /* wrapped back */
+			if ((op_mode & SNAPSHOT_MASK_MODE) && !raw_mode
+				&& (vfe2x_ctrl->num_snap <= 1)) {
+				CDBG("Ignore SOF for snapshot\n");
+				kfree(data);
+				return;
+			}
 			vfe2x_send_isp_msg(vfe2x_ctrl, MSG_ID_SOF_ACK);
 			if (raw_mode)
 				vfe2x_send_isp_msg(vfe2x_ctrl,

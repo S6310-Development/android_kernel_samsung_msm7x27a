@@ -1,4 +1,4 @@
-/* Copyright (c) 2011-2012, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2011-2012, Code Aurora Forum. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -67,11 +67,9 @@ int32_t msm_actuator_i2c_write(struct msm_actuator_ctrl_t *a_ctrl,
 	struct msm_actuator_reg_params_t *write_arr = a_ctrl->reg_tbl;
 	uint32_t hw_dword = hw_params;
 	uint16_t i2c_byte1 = 0, i2c_byte2 = 0;
-	uint32_t value = 0;
+	uint16_t value = 0;
 	uint32_t size = a_ctrl->reg_tbl_size, i = 0;
 	int32_t rc = 0;
-	unsigned char buf[4];
-	int length = 0;
 	CDBG("%s: IN\n", __func__);
 	for (i = 0; i < size; i++) {
 		if (write_arr[i].reg_write_type == MSM_ACTUATOR_WRITE_DAC) {
@@ -105,27 +103,7 @@ int32_t msm_actuator_i2c_write(struct msm_actuator_ctrl_t *a_ctrl,
 				i2c_byte1 = (value & 0xFF00) >> 8;
 				i2c_byte2 = value & 0xFF;
 			}
-		}
-		else if (write_arr[i].reg_write_type == MSM_ACTUATOR_WRITE_DAC_AD5823) {
-			value = (next_lens_position <<
-				write_arr[i].data_shift) |
-				((hw_dword & write_arr[i].hw_mask) <<
-				write_arr[i].hw_shift);
-
-			buf[0] = write_arr[i].reg_addr;
-			buf[1] = (value & 0xff00)>>8;//MSB
-			buf[2] = value & 0xff;//LSB
-			length = 3;
-			CDBG("%s: position is 0x%x, MSB0x%x, LSB:0x%x\r\n", __func__, value, buf[1], buf[2]);
-			rc = msm_camera_i2c_txdata(&a_ctrl->i2c_client, buf, length);
-			if (rc < 0) {
-				pr_err("%s: i2c write error:%d\n",
-					__func__, rc);
-				return rc;
-			}
-			break;
-		}
-		else {
+		} else {
 			i2c_byte1 = write_arr[i].reg_addr;
 			i2c_byte2 = (hw_dword & write_arr[i].hw_mask) >>
 				write_arr[i].hw_shift;
@@ -187,13 +165,6 @@ int32_t msm_actuator_write_focus(
 	uint16_t damping_code_step = 0;
 	uint16_t wait_time = 0;
 
-	if(!damping_params) {
-		pr_err("%s: damping params are NULL\n",
-				__func__);
-		rc = -EINVAL;
-		return rc;
-	}
-
 	damping_code_step = damping_params->damping_step;
 	wait_time = damping_params->damping_delay;
 
@@ -233,31 +204,15 @@ int32_t msm_actuator_piezo_move_focus(
 	int32_t dest_step_position = move_params->dest_step_pos;
 	int32_t rc = 0;
 	int32_t num_steps = move_params->num_steps;
-	struct damping_params_t ringing_params[MAX_ACTUATOR_REGION];
 
 	if (num_steps == 0)
 		return rc;
-
-	if(!move_params) {
-		pr_err("%s move_params can't be null\n",
-				__func__);
-		rc = -EINVAL;
-		return rc;
-	}
-	if (copy_from_user(&ringing_params[0],
-				(void __user *)&(move_params->
-					ringing_params[0]),
-				(sizeof(struct damping_params_t) *
-				 MAX_ACTUATOR_REGION))) {
-		rc = -EINVAL;
-		return rc;
-	}
 
 	rc = a_ctrl->func_tbl->
 		actuator_i2c_write(a_ctrl,
 		(num_steps *
 		a_ctrl->region_params[0].code_per_step),
-		ringing_params[0].hw_params);
+		move_params->ringing_params[0].hw_params);
 
 	a_ctrl->curr_step_pos = dest_step_position;
 	return rc;
@@ -276,7 +231,6 @@ int32_t msm_actuator_move_focus(
 	uint16_t curr_lens_pos = 0;
 	int dir = move_params->dir;
 	int32_t num_steps = move_params->num_steps;
-	struct damping_params_t ringing_params[MAX_ACTUATOR_REGION];
 
 	CDBG("%s called, dir %d, num_steps %d\n",
 		__func__,
@@ -290,21 +244,6 @@ int32_t msm_actuator_move_focus(
 	CDBG("curr_step_pos =%d dest_step_pos =%d curr_lens_pos=%d\n",
 		a_ctrl->curr_step_pos, dest_step_pos, curr_lens_pos);
 
-	if(!move_params) {
-		pr_err("%s move_params can't be null\n",
-				__func__);
-		rc = -EINVAL;
-		return rc;
-	}
-	if (copy_from_user(&ringing_params[0],
-				(void __user *)&(move_params->
-					ringing_params[0]),
-				(sizeof(struct damping_params_t) *
-				 MAX_ACTUATOR_REGION))) {
-		rc = -EINVAL;
-		return rc;
-	}
-
 	while (a_ctrl->curr_step_pos != dest_step_pos) {
 		step_boundary =
 			a_ctrl->region_params[a_ctrl->curr_region_index].
@@ -315,11 +254,14 @@ int32_t msm_actuator_move_focus(
 			target_step_pos = dest_step_pos;
 			target_lens_pos =
 				a_ctrl->step_position_table[target_step_pos];
+			if (curr_lens_pos == target_lens_pos)
+				return rc;
 			rc = a_ctrl->func_tbl->
 				actuator_write_focus(
 					a_ctrl,
 					curr_lens_pos,
-					&(ringing_params[a_ctrl->
+					&(move_params->
+						ringing_params[a_ctrl->
 						curr_region_index]),
 					sign_dir,
 					target_lens_pos);
@@ -334,11 +276,14 @@ int32_t msm_actuator_move_focus(
 			target_step_pos = step_boundary;
 			target_lens_pos =
 				a_ctrl->step_position_table[target_step_pos];
+			if (curr_lens_pos == target_lens_pos)
+				return rc;
 			rc = a_ctrl->func_tbl->
 				actuator_write_focus(
 					a_ctrl,
 					curr_lens_pos,
-					&(ringing_params[a_ctrl->
+					&(move_params->
+						ringing_params[a_ctrl->
 						curr_region_index]),
 					sign_dir,
 					target_lens_pos);
@@ -584,6 +529,7 @@ int32_t msm_actuator_i2c_probe(
 
 	if (!i2c_check_functionality(client->adapter, I2C_FUNC_I2C)) {
 		pr_err("i2c_check_functionality failed\n");
+		rc = -EFAULT;
 		goto probe_failure;
 	}
 

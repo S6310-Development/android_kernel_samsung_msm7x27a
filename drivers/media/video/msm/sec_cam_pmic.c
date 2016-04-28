@@ -1,12 +1,13 @@
 
 /***************************************************************
-CAMERA Power control
-****************************************************************/
+  CAMERA Power control
+ ****************************************************************/
+
 
 #include "sec_cam_pmic.h"
 
 #include <mach/gpio.h>
-#include <linux/gpio.h>
+#include <asm/gpio.h>
 
 #include <linux/clk.h>
 #include <linux/io.h>
@@ -17,181 +18,76 @@ CAMERA Power control
 #include <mach/vreg.h>
 #include <mach/camera.h>
 #include "sec_cam_pmic.h"
-#define CAM_TEST_REV03		/*temp, rev03 */
+#define CAM_TEST_REV03 //temp, rev03
 
-/*struct regulator *l6, *l15, *l17*/
-struct regulator *l6, *l15, *l17;
-struct regulator *s2, *s3;
+//L6 => VCAM_C_1.2V
+//L15 => VCAM_IO_1.8V
 
-/*
-#ifdef CAM_TEST_REV03
-struct regulator *l8, *l15, *l10, *lvs0,  *s2, *lvs1;//temp
-#else
-struct regulator *l8, *l15, *l24, *lvs0,  *s2, *lvs1;
-#endif
-*/
+struct regulator *l6, *l15;
 
-/* CAM power
-	CAM_SENSOR_A_2.8		:  VREG_L17		: l17
-	CAM_SENSOR_IO_1.8	: VREG_L15		: l15
-	3M_CORE_1.2			: VREG_L6		: l6
-
-	3M_AF_2.8			: VREG_L15A		: l15
-	VT_CORE_1.8			: VREG_L10A		: 10
-	VT_CAM_1.5			: VREG_L10A		: l10
-*/
-void cam_ldo_power_on2(void)
-{
-	int ret;
-	pr_info("#### cam_ldo_power_on ####\n");
-}
-
-
-#if defined(CONFIG_SR300PC20)
-/* CAM power
-	CAM_SENSOR_A_2.8		:  VREG_L17		: l17
-	CAM_SENSOR_IO_1.8	: VREG_L15		: l15
-	3M_CORE_1.2			: VREG_L6		: l6
-*/
 void cam_ldo_power_on(void)
 {
 	int ret;
-	struct vreg *l6, *l15, *l17;
 	unsigned int mclk_cfg;
-	pr_info("#### cam_ldo_power_on ####\n");
+	printk("#### cam_ldo_power_on ####\n");
 
-	l15 = vreg_get(NULL, "vcamio");
+	gpio_set_value_cansleep(CAM_A_EN, 1);
+	msleep(20);
 
+	l15 = regulator_get(NULL, "ldo15");
 	if (!l15)
-		pr_err("[SR300PC20]%s: VREG L15 get failed\n", __func__);
+		printk(KERN_DEBUG "%s: VREG L15 get failed\n", __func__);
 
-	if (vreg_set_level(l15, 1800))
-		pr_err("[SR300PC20]%s: vreg_set_level failed\n", __func__);
+	if (regulator_set_voltage(l15 , 1800000, 1800000))
+		printk(KERN_DEBUG "%s: vreg_set_level failed\n", __func__);
 
-	if (vreg_enable(l15))
-		pr_err("[SR300PC20]%s: reg_enable failed\n", __func__);
+	if (regulator_enable(l15))
+		printk(KERN_DEBUG "%s: reg_enable failed\n", __func__);
 
-	usleep(10);
+	msleep(20); /*t<=2ms */
 
-	l17 = vreg_get(NULL, "vcama");
-
-	if (!l17)
-		pr_err("[SR300PC20]%s: VREG L17 get failed\n", __func__);
-
-	if (vreg_set_level(l17, 2800))
-		pr_err("[SR300PC20]%s: vreg_set_level failed\n", __func__);
-
-	if (vreg_enable(l17))
-		pr_err("![SR300PC20]%s: reg_enable failed\n", __func__);
-
-	usleep(10);
-
-	l6 = vreg_get(NULL, "vcamc");
-
+	/*VCAM-CORE 1.2V*/
+		l6 = regulator_get(NULL, "ldo06");
 	if (!l6)
-		pr_err("[SR300PC20]%s: VREG L6 get failed\n", __func__);
+		printk(KERN_DEBUG "%s: VREG l6 get failed\n", __func__);
 
-	if (vreg_set_level(l6, 1200))
-		pr_err("[SR300PC20]%s: vreg_set_level failed\n", __func__);
+	if (regulator_set_voltage(l6 , 1200000, 1200000))
+		printk(KERN_DEBUG "%s: vreg_set_level failed\n", __func__);
 
-	if (vreg_enable(l6))
-		pr_err("!![SR300PC20]%s:   reg_enable failed\n", __func__);
+	if (regulator_enable(l6))
+		printk(KERN_DEBUG "%s: reg_enable failed\n", __func__);
 
-	usleep(10);
+	msleep(20); /*t<=2ms */
+
 }
+
 
 void cam_ldo_power_off(void)
 {
 	int ret;
-	struct vreg *l6, *l15, *l17;
 
-	pr_info("#### cam_ldo_power_off ####\n");
 
-	l6 = vreg_get(NULL, "vcamc");
-	l15 = vreg_get(NULL, "vcamio");
-	l17 = vreg_get(NULL, "vcama");
 
-	vreg_disable(l6);
-	usleep(10);
+	gpio_set_value_cansleep(CAM_A_EN, 0);
+	msleep(20);
+	if (l6)
+		ret = regulator_disable(l6);
+			/*ret=vreg_disable(l6);*/
+	if (ret)
+		printk(KERN_DEBUG "%s: error disabling regulator\n", __func__);
+		/*regulator_put(l8);*/
 
-	vreg_disable(l17);
-	usleep(10);
+	msleep(20);
 
-	vreg_disable(l15);
-	usleep(10);
+	if (l15)
+		ret = regulator_disable(l15);
+		/*ret = vreg_disable(l15);*/
 
-	gpio_set_value_cansleep(CAM_IO_EN, LOW);
+	if (ret)
+		printk(KERN_DEBUG "%s: error disabling regulator\n", __func__);
+		/*regulator_put(l8);*/
 
-}
-#else  /* no CONFIG_SR300PC20 */
-void cam_ldo_power_on(void)
-{
-	int ret;
-	struct vreg *l6, *l15, *l17;
-	unsigned int mclk_cfg;
-	pr_info("#### cam_ldo_power_on ####\n");
-
-	l17 = vreg_get(NULL, "vcama");
-
-	if (!l17)
-		pr_info("[S5K5CCAF]%s: VREG L17 get failed\n", __func__);
-
-	if (vreg_set_level(l17, 2800))
-		pr_info("[S5K5CCAF]%s: vreg_set_level failed\n", __func__);
-
-	if (vreg_enable(l17))
-		pr_info("![S5K5CCAF]%s: reg_enable failed\n", __func__);
-
-	usleep(10000);
-
-	l6 = vreg_get(NULL, "vcamc");
-
-	if (!l6)
-		pr_info("[S5K5CCAF]%s: VREG L6 get failed\n", __func__);
-
-	if (vreg_set_level(l6, 1200))
-		pr_info("[S5K5CCAF]%s: vreg_set_level failed\n", __func__);
-
-	if (vreg_enable(l6))
-		pr_info("!![S5K5CCAF]%s:   reg_enable failed\n", __func__);
-
-	usleep(10000);
-
-	l15 = vreg_get(NULL, "vcamio");
-
-	if (!l15)
-		pr_info("[S5K5CCAF]%s: VREG L15 get failed\n", __func__);
-
-	if (vreg_set_level(l15, 1800))
-		pr_info("[S5K5CCAF]%s: vreg_set_level failed\n", __func__);
-
-	if (vreg_enable(l15))
-		pr_info("[S5K5CCAF]%s: reg_enable failed\n", __func__);
-
-	usleep(10000);
-}
-
-void cam_ldo_power_off(void)
-{
-	int ret;
-	struct vreg *l6, *l15, *l17;
-
-	pr_info("#### cam_ldo_power_off ####\n");
-
-	l6 = vreg_get(NULL, "vcamc");
-	l15 = vreg_get(NULL, "vcama");
-	l17 = vreg_get(NULL, "vcamio");
-
-	vreg_disable(l6);
-	usleep(1000);
-
-	vreg_disable(l15);
-	usleep(1000);
-
-	vreg_disable(l17);
-	usleep(1000);
-
-	gpio_set_value_cansleep(CAM_IO_EN, LOW);
+	msleep(20);
 
 }
-#endif	/* end CONFIG_SR300PC20 */
+
