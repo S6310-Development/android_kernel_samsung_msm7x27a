@@ -1,4 +1,4 @@
-/* Copyright (c) 2011-2012, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2011-2012, Code Aurora Forum. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -13,6 +13,7 @@
 #include <linux/msm_adsp.h>
 #include <linux/uaccess.h>
 #include <linux/fs.h>
+#include <linux/android_pmem.h>
 #include <linux/slab.h>
 #include <linux/pm_qos.h>
 #include <linux/delay.h>

@@ -1,4 +1,4 @@
-/* Copyright (c) 2011-2012, The Linux Foundation. All Rights Reserved.
+/* Copyright (c) 2011, Code Aurora Forum. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -50,7 +50,6 @@ int32_t msm_camera_i2c_txdata(struct msm_camera_i2c_client *dev_client,
 			.buf = txdata,
 		 },
 	};
-    //S_I2C_DBG("I2C write, saddr:0x%x, addr:0x%02x%02x, data:0x%02x\r\n",saddr, *txdata, *(txdata+1), *(txdata+2));
 	rc = i2c_transfer(dev_client->client->adapter, msg, 1);
 	if (rc < 0)
 		S_I2C_DBG("msm_camera_i2c_txdata faild 0x%x\n", saddr);
@@ -77,6 +76,16 @@ int32_t msm_camera_i2c_write(struct msm_camera_i2c_client *client,
 		S_I2C_DBG("%s byte %d: 0x%x\n", __func__, len, buf[len]);
 		len = 1;
 	} else if (client->addr_type == MSM_CAMERA_I2C_WORD_ADDR) {
+		if(addr == 0xFFFF){
+			if (data > 20)
+				msleep(data);
+			else
+				usleep_range(data*1000,
+					(data+1)*1000);
+
+			printk("###### delay [%d ms]\n", data);
+			return 0;
+		}
 		buf[0] = addr >> BITS_PER_BYTE;
 		buf[1] = addr;
 		S_I2C_DBG("%s byte %d: 0x%x\n", __func__, len, buf[len]);

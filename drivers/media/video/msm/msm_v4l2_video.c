@@ -1,4 +1,4 @@
-/* Copyright (c) 2012-2013, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2012, Code Aurora Forum. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -104,22 +104,13 @@ static int msm_v4l2_overlay_mapformat(uint32_t pixelformat)
 		mdp_format = MDP_RGB_888;
 		break;
 	case V4L2_PIX_FMT_NV12:
-		mdp_format = MDP_Y_CBCR_H2V2;
-		break;
-	case V4L2_PIX_FMT_NV21:
 		mdp_format = MDP_Y_CRCB_H2V2;
 		break;
+	case V4L2_PIX_FMT_NV21:
+		mdp_format = MDP_Y_CBCR_H2V2;
+		break;
 	case V4L2_PIX_FMT_YUV420:
-		mdp_format = MDP_Y_CB_CR_H2V2;
-		break;
-	case V4L2_PIX_FMT_UYVY:
-		mdp_format = MDP_CBYCRY_H2V1;
-		break;
-	case V4L2_PIX_FMT_YUYV:
-		mdp_format = MDP_YCBYCR_H2V1;
-		break;
-	case V4L2_PIX_FMT_YVU420:
-		mdp_format = MDP_Y_CR_CB_GH2V2;
+		mdp_format = MDP_Y_CR_CB_H2V2;
 		break;
 	default:
 		pr_err("%s:Unrecognized format %u\n", __func__, pixelformat);
@@ -149,22 +140,20 @@ msm_v4l2_overlay_fb_update(struct msm_v4l2_overlay_device *vout,
 		src_addr = (unsigned long)v4l2_ram_phys
 		+ vout->bufs[buffer->index].offset;
 		src_size = buffer->bytesused;
-		ret = msm_fb_v4l2_update(vout->par, false, src_addr, src_size,
+		ret = msm_fb_v4l2_update(vout->par, src_addr, src_size,
 		0, 0, 0, 0);
 		break;
 	case V4L2_MEMORY_USERPTR:
 		if (copy_from_user(&up_buffer,
 		(void __user *)buffer->m.userptr,
 		sizeof(struct msm_v4l2_overlay_userptr_buffer))) {
-			pr_err("%s:copy_from_user for userptr failed\n",
-				__func__);
 			mutex_unlock(&msmfb_lock);
 			return -EINVAL;
 		}
-		ret = msm_fb_v4l2_update(vout->par, true,
-		(unsigned long)up_buffer.fd[0], up_buffer.offset[0],
-		(unsigned long)up_buffer.fd[1], up_buffer.offset[1],
-		(unsigned long)up_buffer.fd[2], up_buffer.offset[2]);
+		ret = msm_fb_v4l2_update(vout->par,
+		(unsigned long)up_buffer.base[0], up_buffer.length[0],
+		(unsigned long)up_buffer.base[1], up_buffer.length[1],
+		(unsigned long)up_buffer.base[2], up_buffer.length[2]);
 		break;
 	default:
 		mutex_unlock(&msmfb_lock);
@@ -431,7 +420,6 @@ msm_v4l2_overlay_do_ioctl(struct file *file,
 	struct msm_v4l2_overlay_fh *fh = file->private_data;
 	struct msm_v4l2_overlay_device *vout = fh->vout;
 	int ret;
-	struct v4l2_buffer *buffer = arg;
 
 	switch (cmd) {
 	case VIDIOC_QUERYCAP:
@@ -451,14 +439,7 @@ msm_v4l2_overlay_do_ioctl(struct file *file,
 
 	case VIDIOC_QBUF:
 		mutex_lock(&vout->update_lock);
-		if (buffer->memory == V4L2_MEMORY_USERPTR) {
-			if (!capable(CAP_SYS_RAWIO))
-				return -EPERM;
-			ret = msm_v4l2_overlay_vidioc_qbuf(file, fh, arg, true);
-		} else {
-			ret = msm_v4l2_overlay_vidioc_qbuf(file, fh, arg,
-						false);
-		}
+		ret = msm_v4l2_overlay_vidioc_qbuf(file, fh, arg, false);
 		mutex_unlock(&vout->update_lock);
 
 		return ret;
