@@ -2,7 +2,7 @@ NOTE: This kernel release is UNSTABLE and meant for development of the Samsung G
 Kernel version: 3.4.98
 GPU Clock: Stock
 CPU Clock: Stock
-Builds: Unknown
+Builds: Yes
 
 What needs to be done?
 - Fix up all of Samsung's crappy code
