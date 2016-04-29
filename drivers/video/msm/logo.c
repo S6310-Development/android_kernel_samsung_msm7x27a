@@ -129,8 +129,13 @@ int load_565rle_image(char *filename, bool bf_supported)
 		unsigned n = ptr[0];
 		if (n > max)
 			break;
-		memset16(bits, ptr[1], n << 1);
-		bits += n;
+		if (info->var.bits_per_pixel >= 24) { /* rgb888 */
+			memset16_rgb8888(bits, ptr[1], n << 1);
+			bits += n * 2;
+		} else {
+			memset16(bits, ptr[1], n << 1);
+			bits += n;
+		}
 		max -= n;
 		ptr += 2;
 		count -= 4;
