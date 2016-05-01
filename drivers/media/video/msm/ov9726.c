@@ -10,7 +10,6 @@
  * GNU General Public License for more details.
  */
 
-#include <linux/module.h>
 #include <linux/delay.h>
 #include <linux/types.h>
 #include <linux/i2c.h>
@@ -724,11 +723,9 @@ static int ov9726_sensor_release(void)
 {
 	int rc = -EBADF;
 	mutex_lock(&ov9726_mut);
-	if (ov9726_ctrl->sensordata->sensor_reset_enable) {
-		gpio_direction_output(
-			ov9726_ctrl->sensordata->sensor_reset, 0);
-		gpio_free(ov9726_ctrl->sensordata->sensor_reset);
-	}
+	gpio_direction_output(ov9726_ctrl->sensordata->sensor_reset,
+		0);
+	gpio_free(ov9726_ctrl->sensordata->sensor_reset);
 	kfree(ov9726_ctrl);
 	ov9726_ctrl = NULL;
 	CDBG("ov9726_release completed\n");
