@@ -28,6 +28,7 @@
 
 enum {
 	WAKE_LOCK_SUSPEND, /* Prevent suspend */
+	WAKE_LOCK_IDLE,
 	WAKE_LOCK_TYPE_COUNT
 };
 

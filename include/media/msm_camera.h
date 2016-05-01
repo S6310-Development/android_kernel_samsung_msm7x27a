@@ -664,6 +664,10 @@ struct msm_st_half {
 	uint32_t buf_p1_off;
 	uint32_t buf_p0_stride;
 	uint32_t buf_p1_stride;
+	uint32_t buf_y_off;
+	uint32_t buf_cbcr_off;
+	uint32_t buf_y_stride;
+	uint32_t buf_cbcr_stride;
 	uint32_t pix_x_off;
 	uint32_t pix_y_off;
 	struct msm_st_crop stCropInfo;

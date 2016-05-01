@@ -11,7 +11,6 @@
  *
  */
 
-#include <linux/module.h>
 #include <linux/slab.h>
 #include <linux/delay.h>
 #include <linux/types.h>
@@ -381,7 +380,7 @@ static long mt9d113_set_sensor_mode(int mode)
 			return rc;
 		rc =
 		mt9d113_i2c_write(mt9d113_client->addr,
-						0x0990, 0x0001, WORD_LEN);
+						0x098C, 0x0001, WORD_LEN);
 		if (rc < 0)
 			return rc;
 		break;
@@ -392,13 +391,13 @@ static long mt9d113_set_sensor_mode(int mode)
 						0x098C, 0xA115, WORD_LEN);
 		rc =
 		mt9d113_i2c_write(mt9d113_client->addr,
-						0x0990, 0x0002, WORD_LEN);
+						0x098C, 0x0002, WORD_LEN);
 		rc =
 		mt9d113_i2c_write(mt9d113_client->addr,
 						0x098C, 0xA103, WORD_LEN);
 		rc =
 		mt9d113_i2c_write(mt9d113_client->addr,
-						0x0990, 0x0002, WORD_LEN);
+						0x098C, 0x0002, WORD_LEN);
 		break;
 	default:
 		return -EINVAL;
@@ -489,7 +488,15 @@ static int mt9d113_probe_init_sensor(const struct msm_camera_sensor_info
 {
 	int32_t rc = 0;
 	uint16_t chipid = 0;
-
+	rc = gpio_request(data->sensor_pwd, "mt9d113");
+	if (!rc) {
+		printk(KERN_INFO "sensor_reset = %d\n", rc);
+		gpio_direction_output(data->sensor_pwd, 0);
+		usleep_range(11000, 12000);
+	} else {
+		goto init_probe_done;
+	}
+	msleep(20);
 	rc = gpio_request(data->sensor_reset, "mt9d113");
 	printk(KERN_INFO " mt9d113_probe_init_sensor\n");
 	if (!rc) {
@@ -502,12 +509,12 @@ static int mt9d113_probe_init_sensor(const struct msm_camera_sensor_info
 		goto init_probe_done;
 	printk(KERN_INFO " mt9d113_probe_init_sensor called\n");
 	rc = mt9d113_i2c_read(mt9d113_client->addr, REG_MT9D113_MODEL_ID,
-						&chipid, WORD_LEN);
+						&chipid, 2);
 	if (rc < 0)
 		goto init_probe_fail;
 	/*Compare sensor ID to MT9D113 ID: */
 	if (chipid != MT9D113_MODEL_ID) {
-		printk(KERN_INFO "mt9d113_probe_init_sensor chip id is%d\n",
+		printk(KERN_INFO "mt9d113_probe_init_sensor chip idis%d\n",
 			chipid);
 	}
 	CDBG("mt9d113_probe_init_sensor Success\n");
@@ -641,7 +648,7 @@ static int __mt9d113_probe(struct platform_device *pdev)
 static struct platform_driver msm_camera_driver = {
 	.probe = __mt9d113_probe,
 	.driver = {
-		.name = "msm_cam_mt9d113",
+		.name = "msm_camera_mt9d113",
 		.owner = THIS_MODULE,
 	},
 };

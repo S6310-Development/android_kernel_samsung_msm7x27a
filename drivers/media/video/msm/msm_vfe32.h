@@ -1,4 +1,4 @@
-/* Copyright (c) 2011-2012, Code Aurora Forum. All rights reserved.
+/* Copyright (c) 2011, Code Aurora Forum. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -13,19 +13,8 @@
 #ifndef __MSM_VFE32_H__
 #define __MSM_VFE32_H__
 
-#include <linux/bitops.h>
-
 #define TRUE  1
 #define FALSE 0
-
-#define VFE32_HW_NUMBER 0x3030B
-#define VFE33_HW_NUMBER 0x30408
-
-/* This defines total number registers in VFE.
- * Each register is 4 bytes so to get the range,
- * multiply this number with 4. */
-#define VFE32_REGISTER_TOTAL 0x000001CD
-#define VFE33_REGISTER_TOTAL 0x000001EE
 
 /* at start of camif,  bit 1:0 = 0x01:enable
  * image data capture at frame boundary. */
@@ -87,9 +76,6 @@
  * the luma samples.  JPEG 4:2:2 */
 #define VFE_CHROMA_UPSAMPLE_INTERPOLATED 0
 
-/* wm bit offset for IRQ MASK and IRQ STATUS register */
-#define VFE_WM_OFFSET 6
-
 /* constants for irq registers */
 #define VFE_DISABLE_ALL_IRQS 0
 /* bit =1 is to clear the corresponding bit in VFE_IRQ_STATUS.  */
@@ -118,17 +104,6 @@
 #define VFE_IRQ_STATUS0_ASYNC_TIMER2  0x40000000  /* bit 30 */
 #define VFE_IRQ_STATUS0_ASYNC_TIMER3  0x80000000  /* bit 32 */
 
-#define VFE_IRQ_STATUS1_RDI0_REG_UPDATE_MASK  0x4000000 /*bit 26*/
-#define VFE_IRQ_STATUS1_RDI1_REG_UPDATE_MASK  0x8000000 /*bit 27*/
-
-/*TODOs the irq status passed from axi to vfe irq handler does not account
-* for 2 irq status registers. So below macro is added to differentiate between
-* same bit set on both irq status registers. This wil be fixed later by passing
-*entire payload to vfe irq handler and parsing there instead of passing just the
-*status bit*/
-#define VFE_IRQ_STATUS1_RDI0_REG_UPDATE  0x84000000 /*bit 26*/
-#define VFE_IRQ_STATUS1_RDI1_REG_UPDATE  0x88000000 /*bit 27*/
-
 /* imask for while waiting for stop ack,  driver has already
  * requested stop, waiting for reset irq, and async timer irq.
  * For irq_status_0, bit 28-32 are for async timer. For
@@ -146,8 +121,8 @@
 /* For BPC bit 0,bit 12-17 and bit 26 -20 are set to zero and other's 1 */
 #define BPC_MASK 0xF80C0FFE
 
-/* For ABF bit 4 is set to zero and other's 1 */
-#define ABF_MASK 0xFFFFFFF7
+/* For BPC bit 1 and 2 are set to zero and other's 1 */
+#define ABF_MASK 0xFFFFFFF9
 
 
 /* For DBPC bit 0 is set to zero and other's 1 */
@@ -155,9 +130,6 @@
 
 /* For DBPC bit 1 is set to zero and other's 1 */
 #define DBCC_MASK 0xFFFFFFFD
-
-/* For DBPC/ABF/DBCC/ABCC bits are set to 1 all others 0 */
-#define DEMOSAIC_MASK 0xF
 
 /* For MCE enable bit 28 set to zero and other's 1 */
 #define MCE_EN_MASK 0xEFFFFFFF
@@ -178,18 +150,17 @@
 #define VFE_REG_UPDATE_TRIGGER           1
 #define VFE_PM_BUF_MAX_CNT_MASK          0xFF
 #define VFE_DMI_CFG_DEFAULT              0x00000100
+#define LENS_ROLL_OFF_DELTA_TABLE_OFFSET 32
 #define VFE_AE_PINGPONG_STATUS_BIT       0x80
 #define VFE_AF_PINGPONG_STATUS_BIT       0x100
 #define VFE_AWB_PINGPONG_STATUS_BIT      0x200
 
-#define HFR_MODE_OFF 1
-#define VFE_FRAME_SKIP_PERIOD_MASK 0x0000001F /*bits 0 -4*/
 
 enum VFE32_DMI_RAM_SEL {
 	NO_MEM_SELECTED          = 0,
 	BLACK_LUT_RAM_BANK0      = 0x1,
 	BLACK_LUT_RAM_BANK1      = 0x2,
-	ROLLOFF_RAM0_BANK0       = 0x3,
+	ROLLOFF_RAM              = 0x3,
 	DEMOSAIC_LUT_RAM_BANK0   = 0x4,
 	DEMOSAIC_LUT_RAM_BANK1   = 0x5,
 	STATS_BHIST_RAM0         = 0x6,
@@ -204,19 +175,134 @@ enum VFE32_DMI_RAM_SEL {
 	RGBLUT_CHX_BANK1         = 0xf,
 	STATS_IHIST_RAM          = 0x10,
 	LUMA_ADAPT_LUT_RAM_BANK0 = 0x11,
-	LUMA_ADAPT_LUT_RAM_BANK1 = 0x12,
-	ROLLOFF_RAM1_BANK0       = 0x13,
-	ROLLOFF_RAM0_BANK1       = 0x14,
-	ROLLOFF_RAM1_BANK1       = 0x15,
+	LUMA_ADAPT_LUT_RAM_BANK1 = 0x12
 };
 
-enum vfe_output_state {
+enum  VFE_STATE {
 	VFE_STATE_IDLE,
-	VFE_STATE_START_REQUESTED,
-	VFE_STATE_STARTED,
-	VFE_STATE_STOP_REQUESTED,
-	VFE_STATE_STOPPED,
+	VFE_STATE_ACTIVE
 };
+
+#define V32_DUMMY_0               0
+#define V32_SET_CLK               1
+#define V32_RESET                 2
+#define V32_START                 3
+#define V32_TEST_GEN_START        4
+#define V32_OPERATION_CFG         5
+#define V32_AXI_OUT_CFG           6
+#define V32_CAMIF_CFG             7
+#define V32_AXI_INPUT_CFG         8
+#define V32_BLACK_LEVEL_CFG       9
+#define V32_ROLL_OFF_CFG          10
+#define V32_DEMUX_CFG             11
+#define V32_FOV_CFG               12
+#define V32_MAIN_SCALER_CFG       13
+#define V32_WB_CFG                14
+#define V32_COLOR_COR_CFG         15
+#define V32_RGB_G_CFG             16
+#define V32_LA_CFG                17
+#define V32_CHROMA_EN_CFG         18
+#define V32_CHROMA_SUP_CFG        19
+#define V32_MCE_CFG               20
+#define V32_SK_ENHAN_CFG          21
+#define V32_ASF_CFG               22
+#define V32_S2Y_CFG               23
+#define V32_S2CbCr_CFG            24
+#define V32_CHROMA_SUBS_CFG       25
+#define V32_OUT_CLAMP_CFG         26
+#define V32_FRAME_SKIP_CFG        27
+#define V32_DUMMY_1               28
+#define V32_DUMMY_2               29
+#define V32_DUMMY_3               30
+#define V32_UPDATE                31
+#define V32_BL_LVL_UPDATE         32
+#define V32_DEMUX_UPDATE          33
+#define V32_FOV_UPDATE            34
+#define V32_MAIN_SCALER_UPDATE    35
+#define V32_WB_UPDATE             36
+#define V32_COLOR_COR_UPDATE      37
+#define V32_RGB_G_UPDATE          38
+#define V32_LA_UPDATE             39
+#define V32_CHROMA_EN_UPDATE      40
+#define V32_CHROMA_SUP_UPDATE     41
+#define V32_MCE_UPDATE            42
+#define V32_SK_ENHAN_UPDATE       43
+#define V32_S2CbCr_UPDATE         44
+#define V32_S2Y_UPDATE            45
+#define V32_ASF_UPDATE            46
+#define V32_FRAME_SKIP_UPDATE     47
+#define V32_CAMIF_FRAME_UPDATE    48
+#define V32_STATS_AF_UPDATE       49
+#define V32_STATS_AE_UPDATE       50
+#define V32_STATS_AWB_UPDATE      51
+#define V32_STATS_RS_UPDATE       52
+#define V32_STATS_CS_UPDATE       53
+#define V32_STATS_SKIN_UPDATE     54
+#define V32_STATS_IHIST_UPDATE    55
+#define V32_DUMMY_4               56
+#define V32_EPOCH1_ACK            57
+#define V32_EPOCH2_ACK            58
+#define V32_START_RECORDING       59
+#define V32_STOP_RECORDING        60
+#define V32_DUMMY_5               61
+#define V32_DUMMY_6               62
+#define V32_CAPTURE               63
+#define V32_DUMMY_7               64
+#define V32_STOP                  65
+#define V32_GET_HW_VERSION        66
+#define V32_GET_FRAME_SKIP_COUNTS 67
+#define V32_OUTPUT1_BUFFER_ENQ    68
+#define V32_OUTPUT2_BUFFER_ENQ    69
+#define V32_OUTPUT3_BUFFER_ENQ    70
+#define V32_JPEG_OUT_BUF_ENQ      71
+#define V32_RAW_OUT_BUF_ENQ       72
+#define V32_RAW_IN_BUF_ENQ        73
+#define V32_STATS_AF_ENQ          74
+#define V32_STATS_AE_ENQ          75
+#define V32_STATS_AWB_ENQ         76
+#define V32_STATS_RS_ENQ          77
+#define V32_STATS_CS_ENQ          78
+#define V32_STATS_SKIN_ENQ        79
+#define V32_STATS_IHIST_ENQ       80
+#define V32_DUMMY_8               81
+#define V32_JPEG_ENC_CFG          82
+#define V32_DUMMY_9               83
+#define V32_STATS_AF_START        84
+#define V32_STATS_AF_STOP         85
+#define V32_STATS_AE_START        86
+#define V32_STATS_AE_STOP         87
+#define V32_STATS_AWB_START       88
+#define V32_STATS_AWB_STOP        89
+#define V32_STATS_RS_START        90
+#define V32_STATS_RS_STOP         91
+#define V32_STATS_CS_START        92
+#define V32_STATS_CS_STOP         93
+#define V32_STATS_SKIN_START      94
+#define V32_STATS_SKIN_STOP       95
+#define V32_STATS_IHIST_START     96
+#define V32_STATS_IHIST_STOP      97
+#define V32_DUMMY_10              98
+#define V32_SYNC_TIMER_SETTING    99
+#define V32_ASYNC_TIMER_SETTING   100
+#define V32_LIVESHOT              101
+#define V32_LA_SETUP              102
+
+#define V32_LINEARIZATION         103
+#define V32_DEMOSAICV3            104
+#define V32_DEMOSAICV3_ABCC_CFG   105
+#define V32_DEMOSAICV3_DBCC_CFG       106
+#define V32_DEMOSAICV3_DBPC_CFG       107
+#define V32_DEMOSAICV3_ABF_CFG        108
+#define V32_DEMOSAICV3_ABCC_UPDATE    109
+#define V32_DEMOSAICV3_DBCC_UPDATE    110
+#define V32_DEMOSAICV3_DBPC_UPDATE    111
+#define V32_EZTUNE_CFG            112
+
+#define V32_CLF_CFG               118
+#define V32_CLF_UPDATE            119
+#define V32_STATS_IHIST3_2_START  120
+#define V32_STATS_IHIST3_2_UPDATE 121
+#define V32_CAMIF3_2_CONFIG       122
 
 #define V32_CAMIF_OFF             0x000001E4
 #define V32_CAMIF_LEN             32
@@ -228,8 +314,6 @@ enum vfe_output_state {
 #define V32_DEMOSAICV3_0_LEN      4
 #define V32_DEMOSAICV3_1_OFF      0x0000061C
 #define V32_DEMOSAICV3_1_LEN      88
-#define V32_DEMOSAICV3_2_OFF      0x0000066C
-#define V32_DEMOSAICV3_UP_REG_CNT 5
 /* BPC     */
 #define V32_DEMOSAIC_2_OFF        0x0000029C
 #define V32_DEMOSAIC_2_LEN        8
@@ -237,14 +321,12 @@ enum vfe_output_state {
 #define V32_OUT_CLAMP_OFF         0x00000524
 #define V32_OUT_CLAMP_LEN         8
 
-#define V32_OPERATION_CFG_LEN     44
+#define V32_OPERATION_CFG_LEN     32
 
 #define V32_AXI_OUT_OFF           0x00000038
-#define V32_AXI_OUT_LEN           224
-#define V32_AXI_CH_INF_LEN        32
+#define V32_AXI_OUT_LEN           212
+#define V32_AXI_CH_INF_LEN        24
 #define V32_AXI_CFG_LEN           47
-#define V32_AXI_BUS_FMT_OFF    1
-#define V32_AXI_BUS_FMT_LEN    4
 
 #define V32_FRAME_SKIP_OFF        0x00000504
 #define V32_FRAME_SKIP_LEN        32
@@ -278,19 +360,8 @@ enum vfe_output_state {
 #define V32_BLACK_LEVEL_OFF 0x00000264
 #define V32_BLACK_LEVEL_LEN 16
 
-#define V32_MESH_ROLL_OFF_CFG_OFF             0x00000274
-#define V32_MESH_ROLL_OFF_CFG_LEN             16
-#define V32_MESH_ROLL_OFF_INIT_TABLE_SIZE     13
-#define V32_MESH_ROLL_OFF_DELTA_TABLE_SIZE    208
-#define V32_MESH_ROLL_OFF_DELTA_TABLE_OFFSET  32
-#define V32_GAMMA_LUT_BANK_SEL_MASK           0x00000007
-
-#define V33_PCA_ROLL_OFF_CFG_LEN1             16
-#define V33_PCA_ROLL_OFF_CFG_OFF1             0x00000274
-#define V33_PCA_ROLL_OFF_CFG_LEN2             12
-#define V33_PCA_ROLL_OFF_CFG_OFF2             0x000007A8
-#define V33_PCA_ROLL_OFF_TABLE_SIZE           (17 + (13*4))
-#define V33_PCA_ROLL_OFF_LUT_BANK_SEL_MASK    0x00010000
+#define V32_ROLL_OFF_CFG_OFF 0x00000274
+#define V32_ROLL_OFF_CFG_LEN 16
 
 #define V32_COLOR_COR_OFF 0x00000388
 #define V32_COLOR_COR_LEN 52
@@ -310,7 +381,7 @@ enum vfe_output_state {
 #define V32_CHROMA_SUP_OFF 0x000003E8
 #define V32_CHROMA_SUP_LEN 12
 
-#define V32_MCE_OFF 0x000003F4
+#define V32_MCE_OFF 0x000003E8
 #define V32_MCE_LEN 36
 #define V32_STATS_AF_OFF 0x0000053c
 #define V32_STATS_AF_LEN 16
@@ -337,9 +408,6 @@ enum vfe_output_state {
 
 #define V32_CAPTURE_LEN 4
 
-#define V32_GET_HW_VERSION_OFF 0
-#define V32_GET_HW_VERSION_LEN 4
-
 #define V32_LINEARIZATION_OFF1 0x00000264
 #define V32_LINEARIZATION_LEN1 16
 
@@ -359,23 +427,11 @@ enum vfe_output_state {
 #define V32_DEMOSAICV3_DBCC_OFF 0x0000060C
 #define V32_DEMOSAICV3_DBCC_LEN 16
 
-#define V32_DEMOSAICV3_ABF_OFF 0x000002A4
-#define V32_DEMOSAICV3_ABF_LEN 180
+#define V32_DEMOSAICV3_ABF_OFF 0x0000029C
+#define V32_DEMOSAICV3_ABF_LEN
 
-#define V32_MODULE_CFG_OFF 0x00000010
-#define V32_MODULE_CFG_LEN 4
-
-#define V32_ASF_SPECIAL_EFX_CFG_OFF 0x000005FC
-#define V32_ASF_SPECIAL_EFX_CFG_LEN 4
-
-#define V32_CLF_CFG_OFF 0x000006B0
-#define V32_CLF_CFG_LEN 72
-
-#define V32_CLF_LUMA_UPDATE_OFF 0x000006B4
-#define V32_CLF_LUMA_UPDATE_LEN 60
-
-#define V32_CLF_CHROMA_UPDATE_OFF 0x000006F0
-#define V32_CLF_CHROMA_UPDATE_LEN 8
+#define V32_EZTUNE_CFG_OFF 0x00000010
+#define V32_EZTUNE_CFG_LEN 4
 
 struct vfe_cmd_hw_version {
 	uint32_t minorVersion;
@@ -516,11 +572,15 @@ enum VFE_YUV_INPUT_COSITING_MODE {
 	VFE_YUV_INTERPOLATED
 };
 
+
+/* 13*1  */
+#define VFE32_ROLL_OFF_INIT_TABLE_SIZE  13
+/* 13*16 */
+#define VFE32_ROLL_OFF_DELTA_TABLE_SIZE 208
+
 #define VFE32_GAMMA_NUM_ENTRIES  64
 
 #define VFE32_LA_TABLE_LENGTH    64
-
-#define VFE32_LINEARIZATON_TABLE_LENGTH    36
 
 struct vfe_cmds_demosaic_abf {
 	uint8_t   enable;
@@ -711,6 +771,54 @@ enum VFE_AXI_RD_UNPACK_HBI_SEL {
 	VFE_AXI_RD_HBI_4096_CLOCK_CYCLES
 };
 
+enum VFE32_MESSAGE_ID {
+	MSG_ID_RESET_ACK, /* 0 */
+	MSG_ID_START_ACK,
+	MSG_ID_STOP_ACK,
+	MSG_ID_UPDATE_ACK,
+	MSG_ID_OUTPUT_P,
+	MSG_ID_OUTPUT_T,
+	MSG_ID_OUTPUT_S,
+	MSG_ID_OUTPUT_V,
+	MSG_ID_SNAPSHOT_DONE,
+	MSG_ID_STATS_AEC,
+	MSG_ID_STATS_AF, /* 10 */
+	MSG_ID_STATS_AWB,
+	MSG_ID_STATS_RS,
+	MSG_ID_STATS_CS,
+	MSG_ID_STATS_IHIST,
+	MSG_ID_STATS_SKIN,
+	MSG_ID_EPOCH1,
+	MSG_ID_EPOCH2,
+	MSG_ID_SYNC_TIMER0_DONE,
+	MSG_ID_SYNC_TIMER1_DONE,
+	MSG_ID_SYNC_TIMER2_DONE, /* 20 */
+	MSG_ID_ASYNC_TIMER0_DONE,
+	MSG_ID_ASYNC_TIMER1_DONE,
+	MSG_ID_ASYNC_TIMER2_DONE,
+	MSG_ID_ASYNC_TIMER3_DONE,
+	MSG_ID_AE_OVERFLOW,
+	MSG_ID_AF_OVERFLOW,
+	MSG_ID_AWB_OVERFLOW,
+	MSG_ID_RS_OVERFLOW,
+	MSG_ID_CS_OVERFLOW,
+	MSG_ID_IHIST_OVERFLOW, /* 30 */
+	MSG_ID_SKIN_OVERFLOW,
+	MSG_ID_AXI_ERROR,
+	MSG_ID_CAMIF_OVERFLOW,
+	MSG_ID_VIOLATION,
+	MSG_ID_CAMIF_ERROR,
+	MSG_ID_BUS_OVERFLOW,
+	MSG_ID_SOF_ACK,
+	MSG_ID_STOP_REC_ACK,
+};
+
+struct vfe_msg_stats {
+	uint32_t    buffer;
+	uint32_t    frameCounter;
+};
+
+
 struct vfe_frame_bpc_info {
 	uint32_t greenDefectPixelCount;
 	uint32_t redBlueDefectPixelCount;
@@ -727,12 +835,38 @@ struct vfe_msg_camif_status {
 	uint32_t lineCount;
 };
 
+
 struct vfe32_irq_status {
 	uint32_t vfeIrqStatus0;
 	uint32_t vfeIrqStatus1;
 	uint32_t camifStatus;
 	uint32_t demosaicStatus;
 	uint32_t asfMaxEdge;
+};
+
+struct vfe_msg_output {
+	uint8_t   output_id;
+	uint32_t  yBuffer;
+	uint32_t  cbcrBuffer;
+	struct vfe_frame_bpc_info bpcInfo;
+	struct vfe_frame_asf_info asfInfo;
+	uint32_t  frameCounter;
+};
+
+struct vfe_message {
+	enum VFE32_MESSAGE_ID _d;
+	union {
+		struct vfe_msg_output              msgOut;
+		struct vfe_msg_stats               msgStats;
+		struct vfe_msg_camif_status        msgCamifError;
+	} _u;
+};
+
+/* New one for 7x30 */
+struct msm_vfe32_cmd {
+	int32_t  id;
+	uint16_t length;
+	void     *value;
 };
 
 #define V32_PREVIEW_AXI_FLAG  0x00000001
@@ -761,9 +895,6 @@ struct vfe32_output_ch {
 	int8_t ch2;
 	uint32_t  capture_cnt;
 	uint32_t  frame_drop_cnt;
-	struct msm_free_buf ping;
-	struct msm_free_buf pong;
-	struct msm_free_buf free_buf;
 };
 
 /* no error irq in mask 0 */
@@ -795,15 +926,12 @@ struct vfe32_output_ch {
 #define VFE32_IMASK_STATS_SKIN_BHIST_BUS_OVFL (0x00000001<<21)
 #define VFE32_IMASK_AXI_ERROR                 (0x00000001<<22)
 
-#define VFE_COM_STATUS 0x000FE000
-
 struct vfe32_output_path {
 	uint16_t output_mode;     /* bitmask  */
 
 	struct vfe32_output_ch out0; /* preview and thumbnail */
 	struct vfe32_output_ch out1; /* snapshot */
-	struct vfe32_output_ch out2; /* rdi0    */
-	struct vfe32_output_ch out3; /* rdi01   */
+	struct vfe32_output_ch out2; /* video    */
 };
 
 struct vfe32_frame_extra {
@@ -884,55 +1012,17 @@ struct vfe32_frame_extra {
 #define VFE_CLAMP_MIN                   0x00000528
 #define VFE_REALIGN_BUF                 0x0000052C
 #define VFE_STATS_CFG                   0x00000530
-#define VFE_STATS_AWB_SGW_CFG           0x00000554
 #define VFE_DMI_CFG                     0x00000598
 #define VFE_DMI_ADDR                    0x0000059C
 #define VFE_DMI_DATA_LO                 0x000005A4
-#define VFE_BUS_IO_FORMAT_CFG           0x000006F8
+#define VFE_BUS_IO_FORMAT_CFG		0x000006F8
 #define VFE_PIXEL_IF_CFG                0x000006FC
-#define VFE_RDI0_CFG                    0x00000734
-#define VFE_RDI1_CFG                    0x000007A4
-
-#define VFE_VIOLATION_STATUS            0x000007B4
-
-#define VFE33_DMI_DATA_HI               0x000005A0
-#define VFE33_DMI_DATA_LO               0x000005A4
-
-#define VFE32_OUTPUT_MODE_PT			BIT(0)
-#define VFE32_OUTPUT_MODE_S			BIT(1)
-#define VFE32_OUTPUT_MODE_V			BIT(2)
-#define VFE32_OUTPUT_MODE_P			BIT(3)
-#define VFE32_OUTPUT_MODE_T			BIT(4)
-#define VFE32_OUTPUT_MODE_P_ALL_CHNLS		BIT(5)
-#define VFE32_OUTPUT_MODE_PRIMARY		BIT(6)
-#define VFE32_OUTPUT_MODE_PRIMARY_ALL_CHNLS	BIT(7)
-#define VFE32_OUTPUT_MODE_SECONDARY		BIT(8)
-#define VFE32_OUTPUT_MODE_SECONDARY_ALL_CHNLS	BIT(9)
-#define VFE32_OUTPUT_MODE_TERTIARY1		BIT(10)
-#define VFE32_OUTPUT_MODE_TERTIARY2		BIT(11)
 
 struct vfe_stats_control {
 	uint8_t  ackPending;
 	uint32_t nextFrameAddrBuf;
 	uint32_t droppedStatsFrameCount;
 	uint32_t bufToRender;
-};
-
-struct axi_ctrl_t {
-	struct v4l2_subdev subdev;
-	struct platform_device *pdev;
-	struct resource *vfeirq;
-	spinlock_t  tasklet_lock;
-	struct list_head tasklet_q;
-
-	void __iomem *vfebase;
-	void *syncdata;
-
-	struct resource	*vfemem;
-	struct resource *vfeio;
-	struct regulator *fs_vfe;
-	struct clk *vfe_clk[3];
-	struct tasklet_struct vfe32_tasklet;
 };
 
 struct vfe32_ctrl_type {
@@ -943,17 +1033,12 @@ struct vfe32_ctrl_type {
 
 	spinlock_t  stop_flag_lock;
 	spinlock_t  update_ack_lock;
-	spinlock_t  start_ack_lock;
 	spinlock_t  state_lock;
 	spinlock_t  io_lock;
 
 	spinlock_t  aec_ack_lock;
 	spinlock_t  awb_ack_lock;
 	spinlock_t  af_ack_lock;
-	spinlock_t  ihist_ack_lock;
-	spinlock_t  rs_ack_lock;
-	spinlock_t  cs_ack_lock;
-	spinlock_t  comp_stats_ack_lock;
 
 	uint32_t extlen;
 	void *extdata;
@@ -962,15 +1047,17 @@ struct vfe32_ctrl_type {
 	int8_t stop_ack_pending;
 	int8_t reset_ack_pending;
 	int8_t update_ack_pending;
-	enum vfe_output_state recording_state;
-	int8_t update_linear;
-	int8_t update_rolloff;
-	int8_t update_la;
-	int8_t update_gamma;
-	enum vfe_output_state liveshot_state;
+	int8_t req_start_video_rec;
+	int8_t req_stop_video_rec;
 
+	spinlock_t  tasklet_lock;
+	struct list_head tasklet_q;
+	int vfeirq;
 	void __iomem *vfebase;
-	uint32_t register_total;
+	void *syncdata;
+
+	struct resource	*vfemem;
+	struct resource *vfeio;
 
 	uint32_t stats_comp;
 	atomic_t vstate;
@@ -994,13 +1081,7 @@ struct vfe32_ctrl_type {
 	struct vfe_stats_control csStatsControl;
 
 	/* v4l2 subdev */
-	struct v4l2_subdev subdev;
-	struct platform_device *pdev;
-	spinlock_t  sd_notify_lock;
-	uint32_t hfr_mode;
-	uint32_t frame_skip_cnt;
-	uint32_t frame_skip_pattern;
-	uint32_t snapshot_frame_cnt;
+	struct v4l2_subdev *subdev;
 };
 
 #define statsAeNum      0
@@ -1020,17 +1101,4 @@ struct vfe_cmd_stats_ack {
 struct vfe_cmd_stats_buf {
 	uint32_t statsBuf[VFE_STATS_BUFFER_COUNT];
 };
-
-#define VIDIOC_MSM_AXI_INIT \
-	_IOWR('V', BASE_VIDIOC_PRIVATE + 18, struct msm_cam_media_controller *)
-
-#define VIDIOC_MSM_AXI_RELEASE \
-	_IOWR('V', BASE_VIDIOC_PRIVATE + 19, struct msm_cam_media_controller *)
-
-#define VIDIOC_MSM_AXI_CFG \
-	_IOWR('V', BASE_VIDIOC_PRIVATE + 20, void *)
-
-#define VIDIOC_MSM_AXI_IRQ \
-	_IOWR('V', BASE_VIDIOC_PRIVATE + 21, void *)
-
 #endif /* __MSM_VFE32_H__ */

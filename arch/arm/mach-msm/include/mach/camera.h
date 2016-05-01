@@ -20,6 +20,7 @@
 #include <linux/platform_device.h>
 #include <linux/pm_qos.h>
 #include <linux/regulator/consumer.h>
+#include <linux/wakelock.h>
 #include "linux/types.h"
 
 #include <mach/board.h>
@@ -167,6 +168,8 @@ struct msm_vfe_phy_info {
 	uint32_t p0_phy;
 	uint32_t p1_phy;
 	uint32_t p2_phy;
+	uint32_t y_phy;
+	uint32_t cbcr_phy;
 	uint8_t  output_id; /* VFE31_OUTPUT_MODE_PT/S/V */
 	uint32_t frame_id;
 };
@@ -199,6 +202,8 @@ struct video_crop_t{
 struct msm_vpe_buf_info {
 	uint32_t p0_phy;
 	uint32_t p1_phy;
+	uint32_t y_phy;
+	uint32_t cbcr_phy;
 	struct   timespec ts;
 	uint32_t frame_id;
 	struct	 video_crop_t vpe_crop;
@@ -275,6 +280,7 @@ struct msm_sensor_ctrl {
 	int (*s_init)(const struct msm_camera_sensor_info *);
 	int (*s_release)(void);
 	int (*s_config)(void __user *);
+        int (*s_ext_config)(void __user *); // add for dual camera interface
 	enum msm_camera_type s_camera_type;
 	uint32_t s_mount_angle;
 	enum msm_st_frame_packing s_video_packing;
@@ -353,6 +359,7 @@ struct msm_sync {
 	struct msm_sensor_ctrl sctrl;
 	struct msm_strobe_flash_ctrl sfctrl;
 	struct pm_qos_request idle_pm_qos;
+	struct wake_lock wake_lock;
 	struct platform_device *pdev;
 	int16_t ignore_qcmd_type;
 	uint8_t ignore_qcmd;
@@ -582,7 +589,7 @@ int  msm_camio_clk_enable(enum msm_camio_clk_type clk);
 int  msm_camio_clk_disable(enum msm_camio_clk_type clk);
 int  msm_camio_clk_config(uint32_t freq);
 void msm_camio_clk_rate_set(int rate);
-int msm_camio_vfe_clk_rate_set(int rate);
+void msm_camio_vfe_clk_rate_set(int rate);
 void msm_camio_clk_rate_set_2(struct clk *clk, int rate);
 void msm_camio_clk_axi_rate_set(int rate);
 void msm_disable_io_gpio_clk(struct platform_device *);
