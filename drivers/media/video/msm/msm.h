@@ -35,7 +35,7 @@
 /* Header files */
 #include <linux/i2c.h>
 #include <linux/videodev2.h>
-#include <linux/pm_qos.h>
+#include <linux/pm_qos_params.h>
 #include <media/v4l2-dev.h>
 #include <media/v4l2-ioctl.h>
 #include <media/v4l2-device.h>
@@ -45,7 +45,6 @@
 #include <media/videobuf-dma-contig.h>
 #include <media/videobuf-msm-mem.h>
 #include <mach/camera.h>
-#include <linux/msm_ion.h>
 
 #define MSM_V4L2_DIMENSION_SIZE 96
 
