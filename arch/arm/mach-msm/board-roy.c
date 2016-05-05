@@ -38,6 +38,7 @@
 #include <linux/i2c.h>
 #include <linux/i2c/sx150x.h>
 #include <linux/gpio.h>
+#include <linux/android_pmem.h>
 #include <linux/bootmem.h>
 #include <linux/mfd/marimba.h>
 #include <mach/vreg.h>
@@ -62,8 +63,6 @@
 #ifdef CONFIG_SEC_DEBUG
 #include <linux/sec_debug.h>
 #endif
-#define RESERVE_KERNEL_EBI1_SIZE	0x3A000
-#define MSM_RESERVE_AUDIO_SIZE	0xF0000
 #define BOOTLOADER_BASE_ADDR	0x10000
 
 #ifndef CONFIG_BT_CSR_7820
@@ -1615,24 +1614,24 @@ static struct msm_i2c_platform_data msm_gsbi1_qup_i2c_pdata = {
 	.msm_i2c_config_gpio	= gsbi_qup_i2c_gpio_config,
 };
 
-#ifdef CONFIG_ARCH_MSM7X27A
-#define MSM_RESERVE_MDP_SIZE       0x2300000
-#define MSM7x25A_MSM_RESERVE_MDP_SIZE       0x1500000
-
-#define MSM_RESERVE_ADSP_SIZE      0x1300000
-#define MSM7x25A_MSM_RESERVE_ADSP_SIZE      0xB91000
-#define CAMERA_ZSL_SIZE		(SZ_1M * 60)
+#ifdef CONFIG_ROY_RESIZE_MEM_ALLOC
+/* experimental values! to revert if stability issues faced!
+ * try to snatch as much memory as possible, keeping the system stable.
+ */
+#define MSM_PMEM_MDP_SIZE       0x1000000 /* 0x1400000 => 0x2F00000 => 0x1500000 => 0x1000000 (thewisenerd) (16 mB) */
+#define MSM_PMEM_ADSP_SIZE      0x0A00000 /* 0x00D0000 => 0x3300000 => 0x1200000 => 0x0A00000 (thewisenerd) (10 mB) */
+#define MSM_PMEM_AUDIO_SIZE     0x0100000 /* 0x005B000 => 0x01F4000 => 0x0100000 (thewisenerd) (1 mB) */
+#else
+/* pretty stable values! safe to revert back to these! */
+#define MSM_PMEM_MDP_SIZE       0x1400000 /* 0x1400000 => 0x2F00000 => 0x1500000 => 0x1400000 (thewisenerd) (20 mB) */
+#define MSM_PMEM_ADSP_SIZE      0x1000000 /* 0x00D0000 => 0x3300000 => 0x1200000 => 0x1000000 (thewisenerd) (16 mB) */
+#define MSM_PMEM_AUDIO_SIZE     0x0200000 /* 0x005B000 => 0x01F4000 => 0x0200000 (thewisenerd) (2 mB) */
 #endif
 
-#ifdef CONFIG_ION_MSM
-#define MSM_ION_HEAP_NUM        5
+#define PMEM_KERNEL_EBI1_SIZE	0x3A000 /* 237568 B || 232 kB */
+
 static struct platform_device ion_dev;
-static int msm_ion_camera_size;
-static int msm_ion_audio_size;
-static int msm_ion_sf_size;
-static int msm_ion_camera_size_carving;
-#endif
-
+static struct platform_device android_pmem_adsp_device;
 
 static struct android_usb_platform_data android_usb_pdata = {
 	.update_pid_and_serial_num = usb_diag_update_pid_and_serial_num,
@@ -2164,24 +2163,6 @@ static struct msm_pm_boot_platform_data msm_pm_8625_boot_pdata __initdata = {
 	.v_addr = MSM_CFG_CTL_BASE,
 };
 
-static unsigned reserve_mdp_size = MSM_RESERVE_MDP_SIZE;
-static int __init reserve_mdp_size_setup(char *p)
-{
-	reserve_mdp_size = memparse(p, NULL);
-	return 0;
-}
-
-early_param("reserve_mdp_size", reserve_mdp_size_setup);
-
-static unsigned reserve_adsp_size = MSM_RESERVE_ADSP_SIZE;
-static int __init reserve_adsp_size_setup(char *p)
-{
-	reserve_adsp_size = memparse(p, NULL);
-	return 0;
-}
-
-early_param("reserve_adsp_size", reserve_adsp_size_setup);
-
 static struct smsc911x_platform_config smsc911x_config = {
 	.irq_polarity	= SMSC911X_IRQ_POLARITY_ACTIVE_HIGH,
 	.irq_type	= SMSC911X_IRQ_TYPE_PUSH_PULL,
@@ -2389,6 +2370,7 @@ static struct platform_device *common_devices[] __initdata = {
 	&msm_device_snd,
 	&msm_device_adspdec,
 	&msm_device_cad,
+	&android_pmem_adsp_device,
 	&asoc_msm_pcm,
 	&asoc_msm_dai0,
 	&asoc_msm_dai1,
@@ -2434,79 +2416,64 @@ static struct platform_device *msm8625_surf_devices[] __initdata = {
 #endif
 };
 
-static unsigned reserve_kernel_ebi1_size = RESERVE_KERNEL_EBI1_SIZE;
-static int __init reserve_kernel_ebi1_size_setup(char *p)
+static struct android_pmem_platform_data android_pmem_adsp_pdata = {
+	.name = "pmem_adsp",
+	.allocator_type = PMEM_ALLOCATORTYPE_BITMAP,
+	.cached = 0,
+	.memory_type = MEMTYPE_EBI1,
+};
+
+static struct platform_device android_pmem_adsp_device = {
+	.name = "android_pmem",
+	.id = 1,
+	.dev = { .platform_data = &android_pmem_adsp_pdata },
+};
+
+static unsigned pmem_adsp_size = MSM_PMEM_ADSP_SIZE;
+static int __init pmem_adsp_size_setup(char *p)
 {
-	reserve_kernel_ebi1_size = memparse(p, NULL);
+	pmem_adsp_size = memparse(p, NULL);
 	return 0;
 }
-early_param("reserve_kernel_ebi1_size", reserve_kernel_ebi1_size_setup);
 
-static unsigned reserve_audio_size = MSM_RESERVE_AUDIO_SIZE;
-static int __init reserve_audio_size_setup(char *p)
-{
-	reserve_audio_size = memparse(p, NULL);
-	return 0;
-}
-early_param("reserve_audio_size", reserve_audio_size_setup);
-
-static void fix_sizes(void)
-{
-	if (machine_is_msm7625a_surf() || machine_is_msm7625a_ffa()) {
-		reserve_mdp_size = MSM7x25A_MSM_RESERVE_MDP_SIZE;
-		reserve_adsp_size = MSM7x25A_MSM_RESERVE_ADSP_SIZE;
-	} else {
-		reserve_mdp_size = MSM_RESERVE_MDP_SIZE;
-		reserve_adsp_size = MSM_RESERVE_ADSP_SIZE;
-	}
-#ifdef CONFIG_ION_MSM
-	msm_ion_audio_size = MSM_RESERVE_AUDIO_SIZE;
-	msm_ion_sf_size = reserve_mdp_size;
-#endif
-}
+early_param("pmem_adsp_size", pmem_adsp_size_setup);
 
 #ifdef CONFIG_ION_MSM
 #ifdef CONFIG_MSM_MULTIMEDIA_USE_ION
+#define MSM_ION_HEAP_NUM        3
+#else
+#define MSM_ION_HEAP_NUM        1
+#endif
+
+#define MSM_ION_AUDIO_SIZE  (MSM_PMEM_AUDIO_SIZE + PMEM_KERNEL_EBI1_SIZE)
+#define MSM_ION_SF_SIZE  MSM_PMEM_MDP_SIZE
+#define ADSP_RPC_PROG           0x3000000a
+
 static struct ion_co_heap_pdata co_ion_pdata = {
 	.adjacent_mem_id = INVALID_HEAP_ID,
 	.align = PAGE_SIZE,
 };
-#endif
 
-/**
- * These heaps are listed in the order they will be allocated.
- * Don't swap the order unless you know what you are doing!
- */
-struct ion_platform_heap roy_heaps[] = {
+static struct ion_platform_heap roy_heaps[] = {
 		{
 			.id	= ION_SYSTEM_HEAP_ID,
 			.type	= ION_HEAP_TYPE_SYSTEM,
 			.name	= ION_VMALLOC_HEAP_NAME,
 		},
 #ifdef CONFIG_MSM_MULTIMEDIA_USE_ION
-		/* ION_ADSP = CAMERA */
-		{
-			.id	= ION_CAMERA_HEAP_ID,
-			.type	= ION_HEAP_TYPE_CARVEOUT,
-			.name	= ION_CAMERA_HEAP_NAME,
-			.memory_type = ION_EBI_TYPE,
-			.extra_data = (void *)&co_ion_pdata,
-		},
-		/* ION_AUDIO */
 		{
 			.id	= ION_AUDIO_HEAP_ID,
 			.type	= ION_HEAP_TYPE_CARVEOUT,
 			.name	= ION_AUDIO_HEAP_NAME,
 			.memory_type = ION_EBI_TYPE,
-			.extra_data = (void *)&co_ion_pdata,
+			.extra_data = (void *) &co_ion_pdata,
 		},
-		/* ION_MDP = SF */
 		{
 			.id	= ION_SF_HEAP_ID,
 			.type	= ION_HEAP_TYPE_CARVEOUT,
 			.name	= ION_SF_HEAP_NAME,
 			.memory_type = ION_EBI_TYPE,
-			.extra_data = (void *)&co_ion_pdata,
+			.extra_data = &co_ion_pdata,
 		},
 #endif
 };
@@ -2522,6 +2489,11 @@ static struct platform_device ion_dev = {
 	.id = 1,
 	.dev = { .platform_data = &ion_pdata },
 };
+
+/**
+ * These heaps are listed in the order they will be allocated.
+ * Don't swap the order unless you know what you are doing!
+ */
 #endif
 
 static struct memtype_reserve msm7x27a_reserve_table[] __initdata = {
@@ -2535,28 +2507,32 @@ static struct memtype_reserve msm7x27a_reserve_table[] __initdata = {
 	},
 };
 
+static void __init size_pmem_devices(void)
+{
+	android_pmem_adsp_pdata.size = pmem_adsp_size;
+}
 static void __init size_ion_devices(void)
 {
 #ifdef CONFIG_MSM_MULTIMEDIA_USE_ION
-	ion_pdata.heaps[1].size = msm_ion_camera_size;
-	ion_pdata.heaps[2].size = msm_ion_audio_size;
-	ion_pdata.heaps[3].size = msm_ion_sf_size;
+	ion_pdata.heaps[1].size = MSM_ION_AUDIO_SIZE;
+	ion_pdata.heaps[2].size = MSM_ION_SF_SIZE;
 #endif
 }
-
-static void __init reserve_ion_memory(void)
-{
-#if defined(CONFIG_ION_MSM) && defined(CONFIG_MSM_MULTIMEDIA_USE_ION)
-	msm7x27a_reserve_table[MEMTYPE_EBI1].size += msm_ion_camera_size;
-	msm7x27a_reserve_table[MEMTYPE_EBI1].size += msm_ion_audio_size;
-	msm7x27a_reserve_table[MEMTYPE_EBI1].size += msm_ion_sf_size;
-#endif
+static void __init reserve_pmem_memory(void) {
+	msm7x27a_reserve_table[MEMTYPE_EBI1].size += pmem_adsp_size;
 }
+#ifdef CONFIG_MSM_MULTIMEDIA_USE_ION
+static void __init reserve_ion_memory(void) {
+	msm7x27a_reserve_table[MEMTYPE_EBI1].size += MSM_ION_AUDIO_SIZE;
+	msm7x27a_reserve_table[MEMTYPE_EBI1].size += MSM_ION_SF_SIZE;
+}
+#endif
 
 static void __init msm7x27a_calculate_reserve_sizes(void)
 {
-	fix_sizes();
+	size_pmem_devices();
 	size_ion_devices();
+	reserve_pmem_memory();
 	reserve_ion_memory();
 }
 
