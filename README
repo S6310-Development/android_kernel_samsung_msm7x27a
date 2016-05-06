@@ -1,11 +1,13 @@
-NOTE: This kernel release is UNSTABLE and meant for development of the Samsung Galaxy Young.
 Kernel version: 3.4.98
 GPU Clock: Stock
 CPU Clock: Stock
 Builds: Yes
 
 What needs to be done?
-- Fix up all of Samsung's crappy code
+- Allocate PMEM regions propperly
+
+This is my last commit to the kernel
+Goodbye!
 
 
 	Linux kernel release 3.x <http://kernel.org/>
@@ -383,4 +385,5 @@ IF SOMETHING GOES WRONG:
 
    gdb'ing a non-running kernel currently fails because gdb (wrongly)
    disregards the starting offset for which the kernel is compiled.
+
 
