@@ -369,11 +369,11 @@ static ssize_t msm_fb_msm_fb_type(struct device *dev,
 static DEVICE_ATTR(msm_fb_type, S_IRUGO, msm_fb_msm_fb_type, NULL);
 static struct attribute *msm_fb_attrs[] = {
 	&dev_attr_msm_fb_type.attr,
-	&dev_attr_kcal.attr,
 	NULL,
 };
 static struct attribute_group msm_fb_attr_group = {
 	.attrs = msm_fb_attrs,
+	&dev_attr_kcal.attr,
 };
 
 static int msm_fb_create_sysfs(struct platform_device *pdev)
