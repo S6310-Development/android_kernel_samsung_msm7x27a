@@ -373,7 +373,6 @@ static struct attribute *msm_fb_attrs[] = {
 };
 static struct attribute_group msm_fb_attr_group = {
 	.attrs = msm_fb_attrs,
-	&dev_attr_kcal.attr,
 };
 
 static int msm_fb_create_sysfs(struct platform_device *pdev)
