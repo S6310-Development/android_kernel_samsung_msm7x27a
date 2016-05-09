@@ -406,11 +406,11 @@ static DEVICE_ATTR(msm_fb_type, S_IRUGO, msm_fb_msm_fb_type, NULL);
 static DEVICE_ATTR(kcal, S_IRUGO | S_IWUSR | S_IWGRP, msm_fb_get_kcal, msm_fb_set_kcal);
 static struct attribute *msm_fb_attrs[] = {
 	&dev_attr_msm_fb_type.attr,
+	&dev_attr_kcal.attr,
 	NULL,
 };
 static struct attribute_group msm_fb_attr_group = {
 	.attrs = msm_fb_attrs,
-	&dev_attr_kcal.attr,
 };
 
 static int msm_fb_create_sysfs(struct platform_device *pdev)
