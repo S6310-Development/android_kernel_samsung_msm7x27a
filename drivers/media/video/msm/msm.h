@@ -35,7 +35,7 @@
 /* Header files */
 #include <linux/i2c.h>
 #include <linux/videodev2.h>
-#include <linux/pm_qos_params.h>
+#include <linux/pm_qos.h>
 #include <media/v4l2-dev.h>
 #include <media/v4l2-ioctl.h>
 #include <media/v4l2-device.h>
