@@ -620,7 +620,11 @@ config MACH_ROYSS_AUS
         default n
         bool "MSM7x27A ROY"
         help
+<<<<<<< HEAD
           Support for the Qualcomm ROYSS AUS          
+=======
+          Support for the Qualcomm ROYSS AUS 
+>>>>>>> 3164d66... Add NFC driver
 
 config MACH_ROY_DTV
         depends on ARCH_MSM7X27A
