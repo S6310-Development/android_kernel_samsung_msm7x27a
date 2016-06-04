@@ -267,7 +267,7 @@ static long snd_cad_ioctl(struct file *file, unsigned int cmd,
 		dmsg.args.client_data = 0;
 		curr_dev.tx_dev = dev.device.tx_device;
 		curr_dev.rx_dev = dev.device.rx_device;
-		MM_ERR("snd_cad_set_device %d %d %d %d\n", dev.device.rx_device,
+		MM_DBG("snd_cad_set_device %d %d %d %d\n", dev.device.rx_device,
 			dev.device.tx_device, dev.ear_mute, dev.mic_mute);
 
 		rc = msm_rpc_call(snd->ept,
@@ -296,7 +296,7 @@ static long snd_cad_ioctl(struct file *file, unsigned int cmd,
 		vmsg.args.cb_func = -1;
 		vmsg.args.client_data = 0;
 
-		MM_ERR("snd_cad_set_volume %d %d %d %d\n", vol.device.rx_device,
+		MM_DBG("snd_cad_set_volume %d %d %d %d\n", vol.device.rx_device,
 				vol.device.tx_device, vol.method, vol.volume);
 
 		rc = msm_rpc_call(snd->ept,
