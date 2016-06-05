@@ -1,13 +1,11 @@
-Kernel version: 3.4.98
+Kernel version: 3.4.105
 GPU Clock: Stock
 CPU Clock: Stock
 Builds: Yes
 
 What needs to be done?
-- Allocate PMEM regions propperly
-
-This is my last commit to the kernel
-Goodbye!
+- Maintain the kernel
+- Optimize where possible
 
 
 	Linux kernel release 3.x <http://kernel.org/>
