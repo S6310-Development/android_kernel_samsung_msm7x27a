@@ -547,6 +547,7 @@ static int rfcomm_sock_getname(struct socket *sock, struct sockaddr *addr, int *
 	    sk->sk_state != BT_CONNECT && sk->sk_state != BT_CONNECT2)
 		return -ENOTCONN;
 
+	memset(sa, 0, sizeof(*sa));
 	sa->rc_family  = AF_BLUETOOTH;
 	sa->rc_channel = rfcomm_pi(sk)->channel;
 	if (peer)
