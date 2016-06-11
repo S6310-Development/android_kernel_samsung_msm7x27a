@@ -385,9 +385,17 @@ static int msm_server_control(struct msm_cam_server_dev *server_dev,
 
 	/* wait for config return status */
 	D("Waiting for config status\n");
-	rc = wait_event_interruptible_timeout(queue->wait,
-		!list_empty_careful(&queue->list),
-		msecs_to_jiffies(out->timeout_ms));
+	wait_count = 2;
+	do {
+		rc = wait_event_interruptible_timeout(queue->wait,
+                        !list_empty_careful(&queue->list),
+                        msecs_to_jiffies(out->timeout_ms));
+		wait_count--;
+		if (rc != -ERESTARTSYS)
+			break;
+		printk("%s: wait_event interrupted by signal, remain_count = %d",
+                        __func__, wait_count);
+         }while (wait_count > 0);
 	D("Waiting is over for config status\n");
 	if (list_empty_careful(&queue->list)) {
 		if (!rc)
@@ -395,7 +403,7 @@ static int msm_server_control(struct msm_cam_server_dev *server_dev,
 		if (rc < 0) {
 			if (++server_dev->server_evt_id == 0)
 				server_dev->server_evt_id++;
-			pr_err("%s: wait_event error %d\n", __func__, rc);
+			pr_err("%s: wait_event error %d ctrlcmd type : %d\n", __func__, rc, out->type);
 			msm_cam_stop_hardware(pcam);
 			return rc;
 		}
