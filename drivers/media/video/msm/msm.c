@@ -96,7 +96,7 @@ static struct device_attribute msm_camera_antibanding_attr = {
 
 static void msm_queue_init(struct msm_device_queue *queue, const char *name)
 {
-	D("%s\n", __func__);
+	pr_info("%s\n", __func__);
 	spin_lock_init(&queue->lock);
 	queue->len = 0;
 	queue->max = 0;
@@ -118,7 +118,7 @@ static void msm_enqueue(struct msm_device_queue *queue,
 	}
 	list_add_tail(entry, &queue->list);
 	wake_up(&queue->wait);
-	D("%s: woke up %s\n", __func__, queue->name);
+	pr_info("%s: woke up %s\n", __func__, queue->name);
 	spin_unlock_irqrestore(&queue->lock, flags);
 }
 
@@ -363,11 +363,11 @@ static int msm_server_control(struct msm_cam_server_dev *server_dev,
 		goto isp_event_alloc_fail;
 	}
 
-	D("%s\n", __func__);
+	pr_info("%s\n", __func__);
 	mutex_lock(&server_dev->server_queue_lock);
 	if (++server_dev->server_evt_id == 0)
 		server_dev->server_evt_id++;
-	D("%s qid %d evtid %d\n", __func__, out->queue_idx,
+	pr_info("%s qid %d evtid %d\n", __func__, out->queue_idx,
 		server_dev->server_evt_id);
 
 	server_dev->server_queue[out->queue_idx].evt_id =
@@ -400,11 +400,11 @@ static int msm_server_control(struct msm_cam_server_dev *server_dev,
 	 * and wait for results */
 	v4l2_event_queue(server_dev->server_command_queue.pvdev,
 					  &v4l2_evt);
-	D("%s v4l2_event_queue: type = 0x%x\n", __func__, v4l2_evt.type);
+	pr_info("%s v4l2_event_queue: type = 0x%x\n", __func__, v4l2_evt.type);
 	mutex_unlock(&server_dev->server_queue_lock);
 
 	/* wait for config return status */
-	D("Waiting for config status\n");
+	pr_info("Waiting for config status\n");
 	wait_count = 2;
 	do {
 		rc = wait_event_interruptible_timeout(queue->wait,
@@ -416,7 +416,7 @@ static int msm_server_control(struct msm_cam_server_dev *server_dev,
 		printk("%s: wait_event interrupted by signal, remain_count = %d",
                         __func__, wait_count);
          }while (wait_count > 0);
-	D("Waiting is over for config status\n");
+	pr_info("Waiting is over for config status\n");
 	if (list_empty_careful(&queue->list)) {
 		if (!rc)
 			rc = -ETIMEDOUT;
@@ -431,7 +431,7 @@ static int msm_server_control(struct msm_cam_server_dev *server_dev,
 
 	rcmd = msm_dequeue(queue, list_control);
 	BUG_ON(!rcmd);
-	D("%s Finished servicing ioctl\n", __func__);
+	pr_info("%s Finished servicing ioctl\n", __func__);
 
 	ctrlcmd = (struct msm_ctrl_cmd *)(rcmd->command);
 	value = out->value;
@@ -444,7 +444,7 @@ static int msm_server_control(struct msm_cam_server_dev *server_dev,
 
 	kfree(ctrlcmd);
 	free_qcmd(rcmd);
-	D("%s: rc %d\n", __func__, rc);
+	pr_info("%s: rc %d\n", __func__, rc);
 	/* rc is the time elapsed. */
 	if (rc >= 0) {
 		/* TODO: Refactor msm_ctrl_cmd::status field */
@@ -1834,12 +1834,12 @@ int msm_server_send_ctrl(struct msm_ctrl_cmd *out,
 		goto isp_event_alloc_fail;
 	}
 
-	D("%s\n", __func__);
+	pr_info("%s\n", __func__);
 	mutex_lock(&server_dev->server_queue_lock);
 	if (++server_dev->server_evt_id == 0)
 		server_dev->server_evt_id++;
 
-	D("%s qid %d evtid %d\n", __func__, out->queue_idx,
+	pr_info("%s qid %d evtid %d\n", __func__, out->queue_idx,
 		server_dev->server_evt_id);
 	server_dev->server_queue[out->queue_idx].evt_id =
 		server_dev->server_evt_id;
@@ -1870,29 +1870,29 @@ int msm_server_send_ctrl(struct msm_ctrl_cmd *out,
 	 * and wait for results */
 	v4l2_event_queue(server_dev->server_command_queue.pvdev,
 					  &v4l2_evt);
-	D("%s v4l2_event_queue: type = 0x%x\n", __func__, v4l2_evt.type);
+	pr_info("%s v4l2_event_queue: type = 0x%x\n", __func__, v4l2_evt.type);
 	mutex_unlock(&server_dev->server_queue_lock);
 
 	/* wait for config return status */
-	D("Waiting for config status\n");
+	pr_info("Waiting for config status 2!!!\n");
 	rc = wait_event_interruptible_timeout(queue->wait,
 		!list_empty_careful(&queue->list),
 		msecs_to_jiffies(out->timeout_ms));
-	D("Waiting is over for config status\n");
+	pr_info("Waiting is over for config status 2!!!\n");
 	if (list_empty_careful(&queue->list)) {
 		if (!rc)
 			rc = -ETIMEDOUT;
 		if (rc < 0) {
 			if (++server_dev->server_evt_id == 0)
 				server_dev->server_evt_id++;
-			pr_err("%s: wait_event error %d\n", __func__, rc);
+			pr_err("%s: wait_event error #2 LOOK %d\n", __func__, rc);
 			return rc;
 		}
 	}
 
 	rcmd = msm_dequeue(queue, list_control);
 	BUG_ON(!rcmd);
-	D("%s Finished servicing ioctl\n", __func__);
+	pr_info("%s Finished servicing ioctl\n", __func__);
 
 	ctrlcmd = (struct msm_ctrl_cmd *)(rcmd->command);
 	value = out->value;
@@ -1956,7 +1956,7 @@ static int msm_open(struct file *f)
 	struct msm_cam_media_controller *pmctl = NULL;
 	struct msm_cam_server_queue *queue = NULL;
 
-	D("%s\n", __func__);
+	pr_info("%s\n", __func__);
 
 	if (!pcam) {
 		pr_err("%s NULL pointer passed in!\n", __func__);
@@ -1990,7 +1990,7 @@ static int msm_open(struct file *f)
 	pcam_inst->pcam = pcam;
 	pcam->dev_inst[i] = pcam_inst;
 
-	D("%s index %d nodeid %d count %d\n", __func__,
+	pr_info("%s index %d nodeid %d count %d\n", __func__,
 			pcam_inst->my_index,
 			pcam->vnode_id, pcam->use_count);
 	pcam->use_count++;
@@ -2053,7 +2053,7 @@ static int msm_open(struct file *f)
 
 	f->private_data = &pcam_inst->eventHandle;
 
-	D("f->private_data = 0x%x, pcam = 0x%x\n",
+	pr_info("f->private_data = 0x%x, pcam = 0x%x\n",
 		(u32)f->private_data, (u32)pcam_inst);
 
 	if (pcam->use_count == 1) {
@@ -2065,7 +2065,7 @@ static int msm_open(struct file *f)
 		}
 	}
 	mutex_unlock(&pcam->vid_lock);
-	D("%s: end\n", __func__);
+	pr_info("%s: end\n", __func__);
 	return rc;
 
 msm_send_open_server_failed:
@@ -2116,7 +2116,7 @@ int msm_cam_server_close_mctl_session(struct msm_cam_v4l2_device *pcam)
 
 	pmctl = msm_camera_get_mctl(pcam->mctl_handle);
 	if (!pmctl) {
-		D("%s: invalid handle\n", __func__);
+		pr_info("%s: invalid handle\n", __func__);
 		return -ENODEV;
 	}
 
@@ -2144,10 +2144,10 @@ int msm_cam_server_open_mctl_session(struct msm_cam_v4l2_device *pcam,
 {
 	int rc = 0;
 	struct msm_cam_media_controller *pmctl = NULL;
-	D("%s: %p", __func__, g_server_dev.pcam_active);
+	pr_info("%s: %p", __func__, g_server_dev.pcam_active);
 	*p_active = 0;
 	if (g_server_dev.pcam_active) {
-		D("%s: Active camera present return", __func__);
+		pr_info("%s: Active camera present return", __func__);
 		return 0;
 	}
 	rc = msm_cam_server_open_session(&g_server_dev, pcam);
@@ -2160,13 +2160,13 @@ int msm_cam_server_open_mctl_session(struct msm_cam_v4l2_device *pcam,
 	pmctl = msm_camera_get_mctl(pcam->mctl_handle);
 	/* Should be set to sensor ops if any but right now its OK!! */
 	if (!pmctl->mctl_open) {
-		D("%s: media contoller is not inited\n",
+		pr_info("%s: media contoller is not inited\n",
 			 __func__);
 		rc = -ENODEV;
 		return rc;
 	}
 
-	D("%s: call mctl_open\n", __func__);
+	pr_info("%s: call mctl_open\n", __func__);
 	rc = pmctl->mctl_open(pmctl, MSM_APPS_ID_V4L2);
 
 	if (rc < 0) {
@@ -2225,7 +2225,7 @@ static int msm_mmap(struct file *f, struct vm_area_struct *vma)
 	pcam_inst = container_of(f->private_data,
 		struct msm_cam_v4l2_dev_inst, eventHandle);
 
-	D("mmap called, vma=0x%08lx\n", (unsigned long)vma);
+	pr_info("mmap called, vma=0x%08lx\n", (unsigned long)vma);
 
 	if (pcam_inst->is_mem_map_inst &&
 		pcam_inst->mem_map.cookie) {
@@ -2234,7 +2234,7 @@ static int msm_mmap(struct file *f, struct vm_area_struct *vma)
 		return rc;
 	} else
 		rc = vb2_mmap(&pcam_inst->vid_bufq, vma);
-	D("vma start=0x%08lx, size=%ld, ret=%d\n",
+	pr_info("vma start=0x%08lx, size=%ld, ret=%d\n",
 		(unsigned long)vma->vm_start,
 		(unsigned long)vma->vm_end - (unsigned long)vma->vm_start,
 		rc);
@@ -2285,8 +2285,8 @@ static int msm_close(struct file *f)
 	pcam->dev_inst_map[pcam_inst->image_mode] = NULL;
 	if (pcam_inst->vbqueue_initialized)
 		vb2_queue_release(&pcam_inst->vid_bufq);
-	D("%s Closing down instance %p ", __func__, pcam_inst);
-	D("%s index %d nodeid %d count %d\n", __func__, pcam_inst->my_index,
+	pr_info("%s Closing down instance %p ", __func__, pcam_inst);
+	pr_info("%s index %d nodeid %d count %d\n", __func__, pcam_inst->my_index,
 		pcam->vnode_id, pcam->use_count);
 	pcam->dev_inst[pcam_inst->my_index] = NULL;
 	if (pcam_inst->my_index == 0)
@@ -2343,7 +2343,7 @@ static unsigned int msm_poll(struct file *f, struct poll_table_struct *wait)
 	pcam_inst = container_of(f->private_data,
 		struct msm_cam_v4l2_dev_inst, eventHandle);
 	pcam = pcam_inst->pcam;
-	D("%s\n", __func__);
+	pr_info("%s\n", __func__);
 	if (!pcam) {
 		pr_err("%s NULL pointer of camera device!\n", __func__);
 		return -EINVAL;
@@ -2360,7 +2360,7 @@ static unsigned int msm_poll(struct file *f, struct poll_table_struct *wait)
 		}
 		rc |= vb2_poll(&pcam_inst->vid_bufq, f, wait);
 	}
-	D("%s returns, rc  = 0x%x\n", __func__, rc);
+	pr_info("%s returns, rc  = 0x%x\n", __func__, rc);
 	return rc;
 }
 
@@ -2369,7 +2369,7 @@ static unsigned int msm_poll_server(struct file *fp,
 {
 	int rc = 0;
 
-	D("%s\n", __func__);
+	pr_info("%s\n", __func__);
 	poll_wait(fp,
 		 &g_server_dev.server_command_queue.eventHandle.wait,
 		 wait);
@@ -2388,7 +2388,7 @@ static long msm_ioctl_server(struct file *file, void *fh,
 	struct msm_mctl_node_info temp_mctl_info;
 	int i;
 
-	D("%s: cmd %d\n", __func__, _IOC_NR(cmd));
+	pr_info("%s: cmd %d\n", __func__, _IOC_NR(cmd));
 
 	switch (cmd) {
 	case MSM_CAM_V4L2_IOCTL_GET_CAMERA_INFO:
@@ -2488,7 +2488,7 @@ static long msm_ioctl_server(struct file *file, void *fh,
 	break;
 
 	case MSM_CAM_V4L2_IOCTL_CTRL_CMD_DONE:
-		D("%s: MSM_CAM_IOCTL_CTRL_CMD_DONE\n", __func__);
+		pr_info("%s: MSM_CAM_IOCTL_CTRL_CMD_DONE\n", __func__);
 		rc = msm_ctrl_cmd_done(arg);
 		break;
 
@@ -2569,7 +2569,7 @@ static long msm_ioctl_server(struct file *file, void *fh,
 		break;
 
 	case MSM_CAM_IOCTL_V4L2_EVT_NATIVE_CMD:
-		D("%s: MSM_CAM_IOCTL_V4L2_EVT_NATIVE_CMD : %d\n",
+		pr_info("%s: MSM_CAM_IOCTL_V4L2_EVT_NATIVE_CMD : %d\n",
 			__func__,_IOC_NR(cmd));
 
 		sensor_native_control(arg);
@@ -2577,7 +2577,7 @@ static long msm_ioctl_server(struct file *file, void *fh,
 		rc = 0;
 		break;
 	case MSM_CAM_IOCTL_V4L2_EVT_NATIVE_FRONT_CMD:
-		D("%s: MSM_CAM_IOCTL_V4L2_EVT_NATIVE_FRONT_CMD : %d\n",
+		pr_info("%s: MSM_CAM_IOCTL_V4L2_EVT_NATIVE_FRONT_CMD : %d\n",
 			__func__, _IOC_NR(cmd));
 #if defined(CONFIG_SR030PC50) || defined(CONFIG_SR200PC20)
 		sensor_native_control_front(arg);
@@ -2595,7 +2595,7 @@ static long msm_ioctl_server(struct file *file, void *fh,
 static int msm_open_server(struct file *fp)
 {
 	int rc = 0;
-	D("%s: open %s\n", __func__, fp->f_path.dentry->d_name.name);
+	pr_info("%s: open %s\n", __func__, fp->f_path.dentry->d_name.name);
 	mutex_lock(&g_server_dev.server_lock);
 	g_server_dev.use_count++;
 	if (g_server_dev.use_count == 1)
@@ -2613,7 +2613,7 @@ static unsigned int msm_poll_config(struct file *fp,
 	if (config == NULL)
 		return -EINVAL;
 
-	D("%s\n", __func__);
+	pr_info("%s\n", __func__);
 
 	poll_wait(fp,
 	&config->config_stat_event_queue.eventHandle.wait, wait);

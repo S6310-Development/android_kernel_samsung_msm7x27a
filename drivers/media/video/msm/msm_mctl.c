@@ -473,13 +473,19 @@ static int msm_mctl_register_subdevs(struct msm_cam_media_controller *p_mctl,
 
 	/* register vfe subdev */
 	driver = driver_find(MSM_VFE_DRV_NAME, &platform_bus_type);
-	if (!driver)
+	if (!driver) {
+		pr_err("%s:%d:VFE: Failure: goto out\n",
+			__func__, __LINE__);
 		goto out;
+	}
 
 	dev = driver_find_device(driver, NULL, 0,
 				msm_mctl_subdev_match_core);
-	if (!dev)
+	if (!dev) {
+		pr_err("%s:%d:VFE: Failure: goto out\n",
+			__func__, __LINE__);
 		goto out;
+	}
 
 	p_mctl->isp_sdev->sd = dev_get_drvdata(dev);
 
@@ -539,7 +545,7 @@ static int msm_mctl_open(struct msm_cam_media_controller *p_mctl,
 		(struct msm_camera_sensor_info *) s_ctrl->sensordata;
 	struct msm_camera_device_platform_data *camdev = sinfo->pdata;
 	uint8_t csid_core;
-	D("%s\n", __func__);
+	pr_err("%s\n", __func__);
 	if (!p_mctl) {
 		pr_err("%s: param is NULL", __func__);
 		return -EINVAL;
