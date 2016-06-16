@@ -231,9 +231,9 @@ static uint32_t lcd_color_preset_lut[256] = {
 	0x00fcfcfc, 0x00fdfdfd, 0x00fefefe, 0x00ffffff
 };
 
-#define R_MASK    0x00ff0000
+#define R_MASK    0x0000ff00
 #define G_MASK    0x000000ff
-#define B_MASK    0x0000ff00
+#define B_MASK    0x00ff0000
 #define R_SHIFT   16
 #define G_SHIFT   0
 #define B_SHIFT   8
