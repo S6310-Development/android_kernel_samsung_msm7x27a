@@ -1484,7 +1484,6 @@ static struct stc311x_platform_data stc3115_data = {
 #endif
 
 
-
 static struct i2c_board_info stc_i2c2_boardinfo[] = {
 
 	{
