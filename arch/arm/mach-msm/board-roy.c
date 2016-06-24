@@ -1369,15 +1369,6 @@ static struct stc311x_platform_data stc3115_data = {
   		.RelaxCurrent = 100, /* current for relaxation in mA (< C/20) */
   		.Adaptive = 1,     /* 1=Adaptive mode enabled, 0=Adaptive mode disabled */
 
-<<<<<<< HEAD
-		.CapDerating[6] = 260,   /* capacity derating in 0.1%, for temp = -20°C */
-  		.CapDerating[5] = 140,   /* capacity derating in 0.1%, for temp = -10°C */
-		.CapDerating[4] = 110,   /* capacity derating in 0.1%, for temp = 0°C */
-		.CapDerating[3] = 50,   /* capacity derating in 0.1%, for temp = 10°C */
-		.CapDerating[2] = 0,   /* capacity derating in 0.1%, for temp = 25°C */
-		.CapDerating[1] = -20,   /* capacity derating in 0.1%, for temp = 40°C */
-		.CapDerating[0] = -30,   /* capacity derating in 0.1%, for temp = 60°C */
-=======
 		.CapDerating[6] = 260,   /* capacity derating in 0.1%, for temp = -20ï¿½C */
   		.CapDerating[5] = 140,   /* capacity derating in 0.1%, for temp = -10ï¿½C */
 		.CapDerating[4] = 110,   /* capacity derating in 0.1%, for temp = 0ï¿½C */
@@ -1385,7 +1376,6 @@ static struct stc311x_platform_data stc3115_data = {
 		.CapDerating[2] = 0,   /* capacity derating in 0.1%, for temp = 25ï¿½C */
 		.CapDerating[1] = -20,   /* capacity derating in 0.1%, for temp = 40ï¿½C */
 		.CapDerating[0] = -30,   /* capacity derating in 0.1%, for temp = 60ï¿½C */
->>>>>>> 3164d66... Add NFC driver
 
   		.OCVOffset[15] = 35,    /* OCV curve adjustment */
 		.OCVOffset[14] = 22,   /* OCV curve adjustment */
@@ -1422,11 +1412,7 @@ static struct stc311x_platform_data stc3115_data = {
 		.OCVOffset2[0] = 0,     /* OCV curve adjustment */
 
 			/*if the application temperature data is preferred than the STC3115 temperature*/
-<<<<<<< HEAD
-  		.ExternalTemperature = Temperature_fn, /*External temperature fonction, return °C*/
-=======
   		.ExternalTemperature = Temperature_fn, /*External temperature fonction, return ï¿½C*/
->>>>>>> 3164d66... Add NFC driver
   		.ForceExternalTemperature = 0, /* 1=External temperature, 0=STC3115 temperature */
 		
 };
@@ -1496,10 +1482,6 @@ static struct stc311x_platform_data stc3115_data = {
 		
 };
 #endif
-<<<<<<< HEAD
-=======
-
->>>>>>> 3164d66... Add NFC driver
 
 
 static struct i2c_board_info stc_i2c2_boardinfo[] = {
@@ -3120,17 +3102,9 @@ static void __init msm7x2x_init(void)
 	msm7x27a_uartdm_config();
 
 	msm7x27a_otg_gadget();
-<<<<<<< HEAD
-
 #ifndef CONFIG_NFC_PN547
 	msm7x27a_cfg_smsc911x();
 #endif
-
-=======
-#ifndef CONFIG_NFC_PN547
-	msm7x27a_cfg_smsc911x();
-#endif
->>>>>>> 3164d66... Add NFC driver
 	fsa9480_gpio_init();
 // GSCHO
 ////////////////////////////////////////////////////////////////////////////

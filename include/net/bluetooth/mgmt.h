@@ -665,7 +665,6 @@ struct mgmt_ev_device_removed {
 //for WIFI Direct issue
 #define MGMT_OP_POWER_OFF		0x00050
 
-#endif /*BT_MGMT*/
 #define MGMT_EV_NEW_CONN_PARAM		0x001c
 struct mgmt_ev_new_conn_param {
 	struct mgmt_addr_info addr;
